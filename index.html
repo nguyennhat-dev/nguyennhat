@@ -111,7 +111,7 @@ input[type=range]{accent-color:var(--acc)}
   </div>
  </div>
 </div>
-<input type="file" id="fi" accept=".mp3,.wav,.m4a,.flac,audio/*" multiple hidden>
+<input type="file" id="fi" accept="audio/*,.mp3,.m4a,.wav,.flac" multiple hidden>
 <input type="file" id="ji" accept=".json,application/json" hidden>
 <div id="toast"></div>
 
@@ -258,9 +258,9 @@ function nextShuffle(){ // "Túi" Fisher-Yates: mỗi bài chỉ lặp lại sau
   if(!bag.length){bag=Q.filter(x=>x!==curId);for(let i=bag.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[bag[i],bag[j]]=[bag[j],bag[i]]}}
   return bag.pop()}
 async function analyze(f){ // Đo độ lớn (RMS) MỘT LẦN lúc import → hệ số gain riêng của bài
-  if(f.size>60e6)return 1; // tệp quá lớn: bỏ qua để tránh tốn RAM trên điện thoại
+  analyze.dur=0;if(f.size>60e6)return 1; // tệp quá lớn: bỏ qua để tránh tốn RAM trên điện thoại
   try{const oc=new(window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,1,44100),ab=await f.arrayBuffer();
-   const buf=await new Promise((ok,no)=>{const p=oc.decodeAudioData(ab,ok,no);p&&p.catch&&p.catch(no)});
+   const buf=await Promise.race([new Promise((ok,no)=>{const p=oc.decodeAudioData(ab,ok,no);p&&p.catch&&p.catch(no)}),new Promise((_,no)=>setTimeout(no,20000))]);analyze.dur=buf.duration;
    const d=buf.getChannelData(0);let q=0,n=0;for(let i=0;i<d.length;i+=7){q+=d[i]*d[i];n++}
    const rms=Math.sqrt(q/n);return rms>.005?Math.min(2,Math.max(.5,.12/rms)):1}catch(e){return 1}}
 
@@ -286,12 +286,15 @@ async function addFiles(files){
     if(lib.some(x=>x.name===f.name&&x.size===f.size)){dup++;continue}
     const base=f.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');const p=base.split(' - ');
     const t={title:(p[1]||p[0]).trim(),artist:p[1]?p[0].trim():'Chưa rõ',album:'Chưa rõ',name:f.name,size:f.size,blob:f,added:Date.now(),duration:0,lyrics:''};
-    t.duration=await probe(f);toast(`Đang phân tích ${f.name}…`);t.gain=await analyze(f);t.id=await DB.put(t);lib.push(t);n++;
+    try{toast(`Đang đọc ${f.name}…`);t.duration=await probe(f);toast(`Đang phân tích ${f.name}…`);t.gain=await analyze(f);if(!t.duration)t.duration=analyze.dur||0;t.id=await DB.put(t);lib.push(t);n++}catch(e){toast('Lỗi lưu '+f.name+': '+(e&&e.message||e));await new Promise(r=>setTimeout(r,2500))}
   }
   toast((n?`Đã thêm ${n} bài`:'Không thêm bài nào')+(dup?` · bỏ qua ${dup} bài trùng`:''));renderAll();quota();
 }
-function probe(f){return new Promise(ok=>{const a=new Audio(),u=URL.createObjectURL(f);a.preload='metadata';a.src=u;
-  a.onloadedmetadata=()=>{ok(a.duration||0);URL.revokeObjectURL(u)};a.onerror=()=>{ok(0);URL.revokeObjectURL(u)}})}
+function probe(f){return new Promise(ok=>{const a=new Audio(),u=URL.createObjectURL(f);let done=false;
+  const end=v=>{if(done)return;done=true;URL.revokeObjectURL(u);ok(v)};
+  a.preload='metadata';a.src=u;
+  a.onloadedmetadata=()=>end(isFinite(a.duration)?a.duration:0);a.onerror=()=>end(0);
+  setTimeout(()=>end(0),4000)})} // iOS có thể không phát sự kiện metadata: quá 4 giây thì bỏ qua, lấy thời lượng khi phân tích
 function curList(){
   let a;
   if(view==='fav')a=lib.filter(t=>favs.has(t.id));
@@ -346,7 +349,7 @@ function renderMain(soft){
   m.innerHTML=`<h2>${esc(title)}</h2>
   <div class="bar"><input type="search" id="q" placeholder="Tìm theo tên bài, ca sĩ, album…" value="${esc(search)}">
    <select id="so" aria-label="Sắp xếp"><option value="added">Ngày thêm</option><option value="title">Tên (A-Z)</option><option value="artist">Ca sĩ</option><option value="duration">Thời lượng</option><option value="manual">Thủ công (trong playlist)</option></select>
-   <select id="fl" aria-label="Bộ lọc"><option value="all">Tất cả</option><option value="fav">Chỉ yêu thích</option><option value="new">Chưa nghe</option></select></div>
+   <select id="fl" aria-label="Bộ lọc"><option value="all">Tất cả</option><option value="fav">Chỉ yêu thích</option><option value="new">Chưa nghe</option></select><button class="chip on" data-add>＋ Thêm nhạc</button></div>
   ${list.length?`<div class="wrap"><table class="tbl"><thead><tr><th>#</th><th>Tên bài hát</th><th>Ca sĩ</th><th>Album</th><th>Thời lượng</th><th></th></tr></thead><tbody>
   ${list.map((t,i)=>`<tr data-id="${t.id}" class="${t.id===curId?'cur':''}"><td>${i+1}</td><td>${esc(t.title)}</td><td>${esc(t.artist)}</td><td>${esc(t.album)}</td><td>${fmt(t.duration)}</td>
   <td class="act">${man?'<button data-a="up" title="Lên">▲</button><button data-a="dn" title="Xuống">▼</button>':''}<button data-a="fav" class="${favs.has(t.id)?'hot':''}" title="Yêu thích">${favs.has(t.id)?'♥':'♡'}</button><button class="dsk" data-a="add" title="Thêm vào playlist">＋</button><button class="dsk" data-a="edit" title="Sửa thông tin">✎</button><button class="mob" data-a="more">⋯</button><button class="dsk" data-a="rm" title="${view.startsWith('pl:')?'Gỡ khỏi playlist':'Xóa'}">✕</button></td></tr>`).join('')}
@@ -414,6 +417,7 @@ document.addEventListener('click',e=>{
    if(pa.dataset.pa==='ren'){const n=prompt('Tên mới:',p.name);if(n&&n.trim()){p.name=n.trim();save();renderAll()}}
    else if(confirm(`Xóa playlist "${p.name}"?`)){playlists=playlists.filter(x=>x!==p);if(view==='pl:'+p.id)view='all';save();renderAll()}
    return}
+  if(e.target.closest('[data-add]')){$('#fi').click();return}
   const tb=e.target.closest('[data-t]');if(tb){tab=tb.dataset.t;lyEdit=false;renderMain();return}
   const pre=e.target.closest('[data-pre]');
   if(pre){S.preset=pre.dataset.pre;PRESETS[S.preset].forEach((v,i)=>{AE.init();AE.setEQ(i,v)});save();renderPanel();return}
