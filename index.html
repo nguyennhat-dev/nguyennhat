@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Nocturne">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Nguyennhatt">
 <meta name="theme-color" content="#0d0e12">
 <link rel="apple-touch-icon" href="icon.png"><link rel="icon" href="icon.png">
-<title>Nocturne</title>
+<title>Nguyennhatt</title>
 <style>
 :root{--bg:#0d0e12;--panel:#15171d;--raise:#1e2129;--line:#272b35;--text:#e9e7e2;--dim:#8d92a0;--acc:#79c0ff}
 *{box-sizing:border-box;margin:0}
@@ -41,7 +41,7 @@ input[type=range]{accent-color:var(--acc)}
 </head>
 <body>
 <div class="app">
- <header><h1>Nocturne</h1><span id="cnt"></span><button class="pri" id="add">＋ Thêm nhạc</button></header>
+ <header><h1>Nguyennhatt</h1><span id="cnt"></span><button class="pri" id="add">＋ Thêm nhạc</button></header>
  <input type="search" id="q" placeholder="Tìm bài hát…" aria-label="Tìm bài hát">
  <div id="list"></div>
  <footer>
@@ -58,7 +58,7 @@ input[type=range]{accent-color:var(--acc)}
 <div id="toast"></div>
 <script>
 'use strict';
-/* Nocturne – trình phát nhạc gọn nhẹ, chạy hoàn toàn offline.
+/* Nguyennhatt – trình phát nhạc gọn nhẹ, chạy hoàn toàn offline.
    Không lưu gì giữa các lần mở: mỗi lần dùng, bạn chọn lại tệp nhạc từ ứng dụng Tệp.
    Dùng MỘT thẻ <audio> duy nhất và không qua Web Audio → ổn định nhất khi khóa màn hình trên iOS. */
 const $=s=>document.querySelector(s);
@@ -144,7 +144,7 @@ function art(){if(artUrl)return artUrl;const c=document.createElement('canvas');
   x.fillStyle='#ffffffcc';x.font='bold 280px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('♪',256,280);return artUrl=c.toDataURL('image/png')}
 function setMedia(t){
   if(!('mediaSession'in navigator))return;const m=navigator.mediaSession;
-  m.metadata=new MediaMetadata({title:t.title,artist:'Nocturne',artwork:[{src:art(),sizes:'512x512',type:'image/png'}]});
+  m.metadata=new MediaMetadata({title:t.title,artist:'Nguyennhatt',artwork:[{src:art(),sizes:'512x512',type:'image/png'}]});
   const h=(a,f)=>{try{m.setActionHandler(a,f)}catch(e){}};
   h('play',()=>au.play());h('pause',()=>au.pause());h('nexttrack',()=>next(false));h('previoustrack',prev);
   h('seekto',e=>{au.currentTime=e.seekTime});
