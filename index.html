@@ -212,6 +212,7 @@ main{ flex:1; width:100%; max-width: 880px; margin: 0 auto; padding: 20px 16px 9
 .action-card{
   display:flex; flex-direction:column; gap:10px;
   text-align:left; padding:16px; border-radius: var(--radius);
+  color: var(--text); font-family: inherit;
   background: var(--surface); border:1px solid var(--border);
   cursor:pointer; transition: border-color .15s, background .15s, transform .08s;
 }
@@ -222,6 +223,8 @@ main{ flex:1; width:100%; max-width: 880px; margin: 0 auto; padding: 20px 16px 9
   font-size:18px; background: var(--bg-elevated); border:1px solid var(--border);
 }
 .action-card__title{ font-weight:700; font-size:15px; }
+/* Điện thoại hẹp: khi có nhãn tiến độ nhóm, ẩn chữ thương hiệu để thanh trên không bị tràn */
+@media (max-width: 480px){ .topbar.has-group .topbar__brand-text{ display:none; } }
 .action-card__sub{ font-size:13px; color: var(--text-muted); line-height:1.4; }
 
 .stat-strip{ display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; }
@@ -2624,6 +2627,10 @@ const S = {
   favorites: new Set(),
   mistakes: {},
   customLists: {},
+  group: null,        // nhóm từ đang học (cố định cho tới khi học xong hoặc thoát)
+  mastery: {},        // từ (khóa chữ thường) -> số lần đúng liên tiếp
+  draft: null,        // nhóm đang được tạo ở màn hình chọn số từ
+  draftSize: 20,
   library: { level:'all', cat:'all', search:'', limit:60, source:'home' },
   pendingSource: null,   // { words, label } chosen from library/custom, waiting at Setup
   session: null,
@@ -2673,9 +2680,11 @@ const persistFavorites = () => saveKey('favorites', [...S.favorites]);
 const persistMistakes = () => saveKey('mistakes', S.mistakes);
 const persistCustomLists = () => saveKey('customLists', S.customLists);
 const persistTheme = () => saveKey('theme', S.theme);
+const persistGroup = () => saveKey('group', S.group);
+const persistMastery = () => saveKey('mastery', S.mastery);
 function persistAll(){
   if (!booted) return; // tránh ghi đè dữ liệu cũ bằng giá trị mặc định khi chưa tải xong
-  persistStats(); persistFavorites(); persistMistakes(); persistCustomLists(); persistTheme();
+  persistStats(); persistFavorites(); persistMistakes(); persistCustomLists(); persistTheme(); persistGroup(); persistMastery();
 }
 window.addEventListener('pagehide', persistAll);
 // Nhiều tab: khi tab khác lưu dữ liệu, tab này nạp lại để lần lưu sau không ghi đè mất dữ liệu mới.
@@ -2687,16 +2696,18 @@ window.addEventListener('storage', (e) => {
   else if (key === 'favorites' && Array.isArray(v)) S.favorites = new Set(v);
   else if (key === 'mistakes' && v && typeof v === 'object') S.mistakes = v;
   else if (key === 'customLists' && v && typeof v === 'object') S.customLists = v;
+  else if (key === 'group') S.group = validateGroup(v);
+  else if (key === 'mastery' && v && typeof v === 'object') S.mastery = v;
   else return;
   if (S.view !== 'quiz' && S.view !== 'flashcards' && S.editingListName === null) render();
 });
 document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState === 'hidden') persistAll(); });
 
 // ---------- backup / restore ----------
-const STATS_DEFAULTS = {xp:0, streak:0, lastStudyDate:null, totalCorrect:0, totalAttempts:0, totalSessions:0};
+const STATS_DEFAULTS = {xp:0, streak:0, lastStudyDate:null, totalCorrect:0, totalAttempts:0, totalSessions:0, groupsCompleted:0};
 function buildBackup(){
   return { app:'english-master', version:1, exportedAt:new Date().toISOString(),
-    data:{ stats:S.stats, favorites:[...S.favorites], mistakes:S.mistakes, customLists:S.customLists, theme:S.theme } };
+    data:{ stats:S.stats, favorites:[...S.favorites], mistakes:S.mistakes, customLists:S.customLists, theme:S.theme, group:S.group, mastery:S.mastery } };
 }
 function exportData(){
   S.stats.lastBackup = Date.now();
@@ -2716,13 +2727,15 @@ function parseBackup(text){
   if (!d || d.app !== 'english-master' || !d.data || typeof d.data !== 'object') throw new Error('bad');
   const x = d.data;
   const stats = Object.assign({}, STATS_DEFAULTS, (x.stats && typeof x.stats === 'object') ? x.stats : {});
-  ['xp','streak','totalCorrect','totalAttempts','totalSessions'].forEach(k=>{ stats[k] = Number(stats[k]) || 0; });
+  ['xp','streak','totalCorrect','totalAttempts','totalSessions','groupsCompleted'].forEach(k=>{ stats[k] = Number(stats[k]) || 0; });
   return {
     stats,
     favorites: Array.isArray(x.favorites) ? x.favorites.filter(v=>typeof v==='string') : [],
     mistakes: (x.mistakes && typeof x.mistakes === 'object' && !Array.isArray(x.mistakes)) ? x.mistakes : {},
     customLists: (x.customLists && typeof x.customLists === 'object' && !Array.isArray(x.customLists)) ? x.customLists : {},
     theme: x.theme === 'light' ? 'light' : 'dark',
+    group: validateGroup(x.group),
+    mastery: (x.mastery && typeof x.mastery === 'object' && !Array.isArray(x.mastery)) ? x.mastery : {},
   };
 }
 function importData(file){
@@ -2738,6 +2751,7 @@ function importData(file){
       S.mistakes = parsed.mistakes;
       S.customLists = parsed.customLists;
       S.theme = parsed.theme;
+      S.group = parsed.group; S.mastery = parsed.mastery;
       document.documentElement.setAttribute('data-theme', S.theme);
       persistAll();
       toast('✅ Đã khôi phục dữ liệu');
@@ -2750,6 +2764,7 @@ function importData(file){
 function resetAllData(){
   S.stats = Object.assign({}, STATS_DEFAULTS);
   S.favorites = new Set(); S.mistakes = {}; S.customLists = {};
+  S.group = null; S.mastery = {};
   persistAll();
   toast('Đã xóa toàn bộ dữ liệu');
   render();
@@ -2841,6 +2856,81 @@ function favoriteWords(){
   return [...S.favorites].map(k => VOCAB_BY_EN.get(k)).filter(Boolean);
 }
 
+// ============================================================
+// NHÓM ĐANG HỌC — một nhóm từ cố định; mọi tính năng chỉ làm việc trong nhóm này
+// ============================================================
+// Một từ được tính là "đã thuộc" khi đúng liên tiếp MASTER_AT lần (trả lời đúng hoặc bấm "Đã nhớ").
+// Sai thì đếm lại từ đầu. Nhóm hoàn thành khi mọi từ trong nhóm đã thuộc.
+const MASTER_AT = 2;
+function validateGroup(g){
+  if (!g || typeof g !== 'object' || typeof g.name !== 'string') return null;
+  if (Array.isArray(g.keys)) return Object.assign({}, g, { keys: g.keys.filter(k => typeof k === 'string') });
+  if (Array.isArray(g.custom)) return Object.assign({}, g, { custom: g.custom.filter(w => w && typeof w.en === 'string' && typeof w.vn === 'string') });
+  return null;
+}
+function isMastered(en){ return (S.mastery[String(en).toLowerCase()] || 0) >= MASTER_AT; }
+function groupWords(){
+  const g = S.group; if (!g) return [];
+  if (g.custom) return g.custom.map(w => ({ en:w.en, vn:w.vn, level:0, cat:'custom' }));
+  return g.keys.map(k => VOCAB_BY_EN.get(k)).filter(Boolean);
+}
+function groupKeySet(){ return new Set(groupWords().map(w => w.en.toLowerCase())); }
+function groupTodoWords(){ return groupWords().filter(w => !isMastered(w.en)); }
+function groupProgress(){
+  const ws = groupWords();
+  const done = ws.filter(w => isMastered(w.en)).length;
+  return { done, total: ws.length, pct: ws.length ? Math.round(done / ws.length * 100) : 0, complete: ws.length > 0 && done === ws.length };
+}
+function groupMistakes(){ const set = groupKeySet(); return mistakeList().filter(m => set.has(m.en.toLowerCase())); }
+function groupFavorites(){ return groupWords().filter(w => S.favorites.has(w.en.toLowerCase())); }
+function recordProgress(word, correct){
+  if (!S.group) return;
+  const k = word.en.toLowerCase();
+  if (!groupKeySet().has(k)) return;
+  S.mastery[k] = correct ? Math.min(9, (S.mastery[k] || 0) + 1) : 0;
+}
+function checkGroupComplete(){
+  if (!S.group || S.group.completedAt) return;
+  if (!groupProgress().complete) return;
+  S.group.completedAt = Date.now();
+  S.stats.groupsCompleted = (S.stats.groupsCompleted || 0) + 1;
+  persistGroup(); persistStats();
+  toast('🎉 Hoàn thành nhóm! Bạn có thể chọn nhóm mới.');
+}
+function createGroupFromDraft(){
+  const d = S.draft; if (!d || !d.words.length) return;
+  const n = Math.min(S.draftSize || d.words.length, d.words.length);
+  // ưu tiên từ chưa thuộc; nếu thiếu mới lấy thêm từ đã thuộc (và đặt lại để học lại)
+  const fresh = shuffleArray(d.words.filter(w => !isMastered(w.en)));
+  const done  = shuffleArray(d.words.filter(w => isMastered(w.en)));
+  const picked = fresh.concat(done).slice(0, n);
+  picked.forEach(w => { delete S.mastery[w.en.toLowerCase()]; });
+  S.group = { id: Date.now(), name: d.label, createdAt: Date.now(), completedAt: null };
+  if (d.custom) S.group.custom = picked.map(w => ({ en: w.en, vn: w.vn }));
+  else S.group.keys = picked.map(w => w.en.toLowerCase());
+  S.draft = null;
+  persistGroup(); persistMastery();
+}
+function leaveGroup(){
+  S.group = null; S.pendingSource = null;
+  persistGroup();
+  toast('Đã thoát nhóm. Hãy chọn nhóm mới.');
+  navigate('home');
+}
+function groupBannerHtml(){
+  if (!S.group) return '';
+  const p = groupProgress();
+  if (p.complete){
+    return `<div class="term corner-mark" style="margin-top:20px;"><div class="term__body result-hero">
+      <div style="font-size:38px;">🎉</div>
+      <div class="result-label text-green">HOÀN THÀNH NHÓM</div>
+      <p class="muted" style="margin:10px 0 16px; font-size:13.5px;">Bạn đã thuộc ${p.total}/${p.total} từ của nhóm "${escapeHtml(S.group.name)}".</p>
+      <button class="btn btn-primary btn-lg" data-action="group-leave">Chọn nhóm mới →</button>
+    </div></div>`;
+  }
+  return `<p class="muted" style="margin-top:16px; font-size:13.5px; text-align:center;">Nhóm "${escapeHtml(S.group.name)}": <strong class="text-cyan">${p.done}/${p.total}</strong> từ đã thuộc</p>`;
+}
+
 // ---------- streak / xp on session end ----------
 // Chuỗi ngày hiển thị: nếu đã bỏ học quá 1 ngày thì chuỗi đã đứt (về 0), dù giá trị lưu chưa cập nhật.
 function currentStreak(){
@@ -2865,6 +2955,11 @@ function navigate(view, opts={}){
   if (view !== 'quiz' && S.session){ clearInterval(S.session.timerHandle); clearTimeout(S.session.advanceHandle); S.session = null; }
   if (view !== 'flashcards'){ S.flashSession = null; }
 
+  // Khi đang có nhóm: không cho vào màn chọn nhóm (phải hoàn thành hoặc thoát nhóm trước).
+  // Khi chưa có nhóm: các màn hình của nhóm không có nội dung để hiển thị.
+  if (S.group && (view === 'library' || view === 'newgroup')) view = 'home';
+  if (!S.group && (view === 'mistakes' || view === 'favorites' || view === 'groupwords')) view = 'home';
+
   S.view = view;
   Object.assign(S, opts);
   render();
@@ -2886,13 +2981,14 @@ function topbarHtml(){
   const inSession = !!S.session && S.view === 'quiz';
   const inFlash = !!S.flashSession && S.view === 'flashcards';
   return `
-  <header class="topbar">
+  <header class="topbar${S.group ? ' has-group' : ''}">
     <button class="topbar__brand" data-action="nav" data-view="home" ${(inSession||inFlash)?'disabled':''}>
       <span class="topbar__brand-mark">E</span>
       <span class="topbar__brand-text">english<span class="text-cyan">://</span>master<span class="cursor"></span></span>
     </button>
     <div class="topbar__actions">
       ${!(inSession||inFlash) ? `
+      ${S.group ? (()=>{ const gp = groupProgress(); return `<div class="pill" title="Nhóm đang học: ${escapeHtml(S.group.name)}">📚 <strong>${gp.done}/${gp.total}</strong></div>`; })() : ''}
       <div class="pill streak" title="Chuỗi ngày học liên tiếp">🔥 <strong>${currentStreak()}</strong></div>
       <div class="pill" title="Cấp độ kinh nghiệm">Cấp <strong>${lvl.level}</strong></div>
       <button class="iconbtn" data-action="toggle-theme" title="Đổi giao diện sáng/tối">${S.theme==='dark' ? '☀️' : '🌙'}</button>
@@ -2916,6 +3012,8 @@ function viewFor(view){
     case 'favorites': return viewFavorites();
     case 'stats': return viewStats();
     case 'custom': return viewCustom();
+    case 'newgroup': return viewNewGroup();
+    case 'groupwords': return viewGroupWords();
     default: return viewHome();
   }
 }
@@ -2926,69 +3024,106 @@ function viewFor(view){
 function viewHome(){
   const lvl = xpLevel(S.stats.xp);
   const acc = S.stats.totalAttempts ? Math.round(S.stats.totalCorrect/S.stats.totalAttempts*100) : null;
-  const mistakeCount = mistakeList().length;
-  const favCount = S.favorites.size;
-  const customCount = Object.keys(S.customLists).length;
-
-  return `
-  <section class="term corner-mark">
-    <div class="term__bar">
-      <div class="term__dots"><span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span></div>
-      <span class="term__path">~/english-master/README</span>
-    </div>
-    <div class="term__body">
-      <div class="eyebrow">Học từ vựng tiếng anh</div>
-      <h1 style="font-size:26px; margin-top:8px; line-height:1.3;">${VOCAB.length} từ vựng, 8 kiểu luyện tập,<br/>một trình học được xây từ chương trình của bạn.</h1>
-      <p class="muted" style="margin-top:10px; font-size:14.5px;">Chọn từ thư viện có sẵn hoặc dán bộ từ riêng của bạn, rồi luyện theo cách bạn thích: trắc nghiệm, gõ từ, giải mã, nghe, flashcard...</p>
-      <div class="row gap-10" style="margin-top:18px; flex-wrap:wrap;">
-        <button class="btn btn-primary btn-lg" data-action="nav" data-view="library">📚 Chọn từ để học ngay</button>
-        <button class="btn btn-secondary btn-lg" data-action="nav" data-view="custom">✏️ Dùng bộ từ của tôi</button>
-      </div>
-    </div>
-  </section>
-
+  const strip = `
   <div class="stat-strip" style="margin-top:18px;">
     <div class="stat-chip"><div class="stat-chip__value text-orange">${currentStreak()}🔥</div><div class="stat-chip__label">Ngày liên tiếp</div></div>
     <div class="stat-chip"><div class="stat-chip__value text-cyan">${S.stats.totalAttempts}</div><div class="stat-chip__label">Lượt đã luyện</div></div>
     <div class="stat-chip"><div class="stat-chip__value text-green">${acc==null?'–':acc+'%'}</div><div class="stat-chip__label">Độ chính xác</div></div>
     <div class="stat-chip"><div class="stat-chip__value">Lv.${lvl.level}</div><div class="stat-chip__label">${S.stats.xp} XP</div></div>
-  </div>
+  </div>`;
+
+  // ---- Chưa có nhóm: chọn nhóm để bắt đầu ----
+  if (!S.group){
+    return `
+    <section class="term corner-mark">
+      <div class="term__bar">
+        <div class="term__dots"><span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span></div>
+        <span class="term__path">~/english-master/chon-nhom</span>
+      </div>
+      <div class="term__body">
+        <div class="eyebrow">Bắt đầu</div>
+        <h1 style="font-size:26px; margin-top:8px; line-height:1.3;">Chọn một nhóm từ để học.</h1>
+        <p class="muted" style="margin-top:10px; font-size:14.5px;">Khi đã chọn, flashcard, luyện tập, từ hay sai và từ yêu thích đều chỉ làm việc trong nhóm này. Học xong nhóm, bạn mới chọn nhóm khác.</p>
+        <div class="row gap-10" style="margin-top:18px; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-lg" data-action="nav" data-view="library">📚 Chọn từ trong thư viện</button>
+          <button class="btn btn-secondary btn-lg" data-action="nav" data-view="custom">✏️ Dùng bộ từ của tôi</button>
+        </div>
+      </div>
+    </section>
+    ${strip}
+    <div class="section-head"><div><div class="eyebrow">Khác</div><div class="section-title">Tiến độ chung</div></div></div>
+    <div class="grid grid-2">
+      <button class="action-card" data-action="nav" data-view="stats">
+        <div class="action-card__icon">📊</div>
+        <div class="action-card__title">Thống kê học tập</div>
+        <div class="action-card__sub">Xem tiến độ, chuỗi ngày học, sao lưu dữ liệu.</div>
+      </button>
+    </div>`;
+  }
+
+  // ---- Đang có nhóm ----
+  const p = groupProgress();
+  const mistakeCount = groupMistakes().length;
+  const favCount = groupFavorites().length;
+  const todo = p.total - p.done;
+  return `
+  <section class="term corner-mark">
+    <div class="term__bar">
+      <div class="term__dots"><span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span></div>
+      <span class="term__path">~/english-master/nhom-dang-hoc</span>
+    </div>
+    <div class="term__body">
+      <div class="eyebrow">Nhóm đang học</div>
+      <h1 style="font-size:24px; margin-top:8px; line-height:1.3;">${escapeHtml(S.group.name)}</h1>
+      <p class="muted" style="margin-top:8px; font-size:14px;">${p.done}/${p.total} từ đã thuộc · còn ${todo} từ.</p>
+      <div class="progress-bar-outer" style="margin-top:12px;"><div class="progress-bar-inner" style="width:${p.pct}%; background:var(--green);"></div></div>
+      ${p.complete ? '' : `<div class="row gap-10" style="margin-top:18px; flex-wrap:wrap;">
+        <button class="btn btn-primary btn-lg" data-action="group-practice">🎯 Luyện tập</button>
+        <button class="btn btn-secondary btn-lg" data-action="group-flash">🃏 Flashcard</button>
+      </div>`}
+    </div>
+  </section>
+
+  ${p.complete ? groupBannerHtml() : ''}
+  ${strip}
 
   <div class="section-head">
-    <div><div class="eyebrow">Luyện tập</div><div class="section-title">Bạn muốn làm gì tiếp theo?</div></div>
+    <div><div class="eyebrow">Trong nhóm này</div><div class="section-title">Bạn muốn làm gì tiếp theo?</div></div>
   </div>
   <div class="grid grid-2">
-    <button class="action-card" data-action="nav" data-view="library">
-      <div class="action-card__icon">📚</div>
-      <div class="action-card__title">Thư viện ${VOCAB.length} từ</div>
-      <div class="action-card__sub">Duyệt theo cấp độ & ${Object.keys(CAT_META).length} chủ đề, có gợi ý sẵn.</div>
+    <button class="action-card" data-action="group-practice">
+      <div class="action-card__icon">🎯</div>
+      <div class="action-card__title">Luyện tập</div>
+      <div class="action-card__sub">Chọn kiểu bài: trắc nghiệm, gõ từ, giải mã, nghe...</div>
     </button>
-    <button class="action-card" data-action="start-flashcards-quick">
+    <button class="action-card" data-action="group-flash">
       <div class="action-card__icon">🃏</div>
-      <div class="action-card__title">Flashcard học nhanh</div>
-      <div class="action-card__sub">Lật thẻ để ghi nhớ, không tính giờ, không áp lực.</div>
+      <div class="action-card__title">Flashcard</div>
+      <div class="action-card__sub">Lật thẻ các từ chưa thuộc trong nhóm.</div>
     </button>
     <button class="action-card" data-action="nav" data-view="mistakes">
       <div class="action-card__icon">🔁</div>
-      <div class="action-card__title">Ôn từ hay sai${mistakeCount?` <span class="badge badge-lvl3">${mistakeCount}</span>`:''}</div>
-      <div class="action-card__sub">${mistakeCount ? 'Hệ thống tự gom các từ bạn còn nhầm.' : 'Chưa có từ nào cần ôn — quá tốt!'}</div>
+      <div class="action-card__title">Từ hay sai${mistakeCount?` <span class="badge badge-lvl3">${mistakeCount}</span>`:''}</div>
+      <div class="action-card__sub">${mistakeCount ? 'Ôn lại các từ trong nhóm bạn còn nhầm.' : 'Chưa có từ nào trong nhóm cần ôn.'}</div>
     </button>
     <button class="action-card" data-action="nav" data-view="favorites">
       <div class="action-card__icon">⭐</div>
       <div class="action-card__title">Từ yêu thích${favCount?` <span class="badge badge-lvl2">${favCount}</span>`:''}</div>
-      <div class="action-card__sub">${favCount ? 'Ôn riêng những từ bạn đã đánh dấu.' : 'Đánh dấu sao cho từ khó nhớ khi duyệt thư viện.'}</div>
+      <div class="action-card__sub">${favCount ? 'Ôn riêng những từ đã đánh dấu trong nhóm.' : 'Bấm ☆ ở từ khó nhớ trong nhóm.'}</div>
     </button>
-    <button class="action-card" data-action="nav" data-view="custom">
-      <div class="action-card__icon">✏️</div>
-      <div class="action-card__title">Bộ từ của tôi${customCount?` <span class="badge badge-lvl1">${customCount}</span>`:''}</div>
-      <div class="action-card__sub">Tự nhập từ theo định dạng "tiếng anh - tiếng việt".</div>
+    <button class="action-card" data-action="nav" data-view="groupwords">
+      <div class="action-card__icon">📋</div>
+      <div class="action-card__title">Danh sách từ của nhóm</div>
+      <div class="action-card__sub">Xem từng từ đã thuộc hay chưa.</div>
     </button>
     <button class="action-card" data-action="nav" data-view="stats">
       <div class="action-card__icon">📊</div>
       <div class="action-card__title">Thống kê học tập</div>
-      <div class="action-card__sub">Xem tiến độ, chuỗi ngày học và cấp độ của bạn.</div>
+      <div class="action-card__sub">Tiến độ chung, chuỗi ngày học, sao lưu.</div>
     </button>
   </div>
+  ${p.complete ? '' : `<button class="btn btn-ghost btn-block" style="margin-top:18px;" data-action="group-leave">Thoát nhóm này, chọn nhóm khác</button>
+  <p class="muted" style="font-size:12.5px; margin-top:8px; text-align:center;">Từ được tính là đã thuộc khi bạn trả lời đúng (hoặc bấm "Đã nhớ") ${MASTER_AT} lần liên tiếp.</p>`}
   `;
 }
 
@@ -3034,7 +3169,7 @@ function viewLibrary(){
 
   return `
   <div class="row-between">
-    <div><div class="eyebrow">Thư viện từ vựng</div><div class="section-title">${VOCAB.length} từ · Cơ bản → Nâng cao</div></div>
+    <div><div class="eyebrow">Bước 1 · Chọn từ cho nhóm học</div><div class="section-title">${VOCAB.length} từ · Cơ bản → Nâng cao</div></div>
   </div>
 
   <div class="field" style="margin-top:14px;">
@@ -3046,7 +3181,7 @@ function viewLibrary(){
 
   <div class="row-between" style="margin: 16px 0 10px;">
     <span class="muted" style="font-size:13px;" id="libResultCount">${results.length} từ phù hợp</span>
-    <button class="btn btn-primary btn-sm" id="libStartBtn" data-action="lib-start" ${results.length===0?'disabled':''}>Luyện tập nhóm này →</button>
+    <button class="btn btn-primary btn-sm" id="libStartBtn" data-action="lib-start" ${results.length===0?'disabled':''}>Tạo nhóm học từ đây →</button>
   </div>
 
   <div id="libEmptyWrap">${empty}</div>
@@ -3120,8 +3255,8 @@ function sampleArrayLocal(arr, n){
   return a.slice(0, Math.min(n,a.length));
 }
 
-function setPendingSource(words, label){
-  S.pendingSource = { words, label };
+function setPendingSource(words, label, extra){
+  S.pendingSource = Object.assign({ words, label }, extra || {});
   S.setupCount = Math.min(15, words.length);
   S.setupMode = S.setupMode || 'mc';
   S.setupTime = S.setupTime || 8;
@@ -3131,7 +3266,7 @@ function viewSetup(){
   const src = S.pendingSource;
   if (!src || !src.words.length){
     return `<div class="empty-state"><div class="empty-state__icon">📭</div><div>Chưa có bộ từ nào được chọn.</div>
-      <button class="btn btn-primary btn-sm" style="margin-top:14px;" data-action="nav" data-view="library">Chọn từ trong thư viện</button></div>`;
+      <button class="btn btn-primary btn-sm" style="margin-top:14px;" data-action="nav" data-view="home">Về trang chủ</button></div>`;
   }
   const total = src.words.length;
   const presets = [10,15,20,30,50].filter(n => n < total);
@@ -3150,6 +3285,14 @@ function viewSetup(){
     </button>`;
   }).join('');
 
+  let scopeHtml = '';
+  if (src.kind === 'group'){
+    const all = groupWords().length, todoN = groupTodoWords().length;
+    scopeHtml = `<div class="field" style="margin-top:14px;"><label>Phạm vi từ</label><div class="chip-row">
+      <button class="chip ${src.scope==='todo'?'active':''}" data-action="setup-set-scope" data-scope="todo" ${todoN?'':'disabled'}>Chưa thuộc (${todoN})</button>
+      <button class="chip ${src.scope==='all'?'active':''}" data-action="setup-set-scope" data-scope="all">Cả nhóm (${all})</button>
+    </div></div>`;
+  }
   const needsTimer = !['free','flash'].includes(S.setupMode);
   const tooFew = total < 4 && needsTimer;
 
@@ -3157,6 +3300,7 @@ function viewSetup(){
   <div class="eyebrow">Thiết lập buổi luyện tập</div>
   <div class="section-title">${escapeHtml(src.label)}</div>
   <p class="muted" style="font-size:13.5px; margin-top:4px;">${total} từ khả dụng trong bộ này.</p>
+  ${scopeHtml}
 
   ${total > uniquePresets[0] ? `
   <div class="field" style="margin-top:20px;">
@@ -3181,6 +3325,60 @@ function viewSetup(){
   ${tooFew ? `<p class="error-text">Cần tối thiểu 4 từ để luyện chế độ tính giờ. Hãy chọn thêm từ hoặc dùng Flashcard / Giấy nháp.</p>` : ''}
 
   <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px;" data-action="start-session" ${tooFew?'disabled':''}>Bắt đầu ${MODES[S.setupMode].icon} →</button>
+  `;
+}
+
+// ---------- Tạo nhóm (bước 2) ----------
+function viewNewGroup(){
+  const d = S.draft;
+  if (!d || !d.words.length){
+    return `<div class="empty-state"><div class="empty-state__icon">📭</div><div>Chưa có từ nào để tạo nhóm.</div>
+      <button class="btn btn-primary btn-sm" style="margin-top:14px;" data-action="nav" data-view="library">Chọn từ trong thư viện</button></div>`;
+  }
+  const total = d.words.length;
+  const fresh = d.words.filter(w => !isMastered(w.en)).length;
+  const sizes = [...new Set([10,20,30,50,100].filter(n => n < total).concat(total))].sort((a,b)=>a-b);
+  const n = Math.min(S.draftSize || 20, total);
+  const chips = sizes.map(x => `<button class="chip ${n===x?'active':''}" data-action="group-set-size" data-count="${x}">${x===total?'Tất cả · '+x:x}</button>`).join('');
+  return `
+  <div class="eyebrow">Bước 2 · Tạo nhóm học</div>
+  <div class="section-title">${escapeHtml(d.label)}</div>
+  <p class="muted" style="font-size:13.5px; margin-top:4px;">${total} từ phù hợp, trong đó ${fresh} từ bạn chưa thuộc. Từ chưa thuộc được ưu tiên đưa vào nhóm.</p>
+  <div class="field" style="margin-top:20px;">
+    <label>Số từ trong nhóm</label>
+    <div class="chip-row">${chips}</div>
+    <div class="hint">Nhóm được cố định ngay khi bắt đầu. Mọi tính năng chỉ dùng đúng ${n} từ này cho đến khi bạn học xong hoặc chọn thoát nhóm.</div>
+  </div>
+  <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px;" data-action="group-start">Bắt đầu học nhóm ${n} từ →</button>
+  <button class="btn btn-ghost btn-block" style="margin-top:10px;" data-action="nav" data-view="${d.custom?'custom':'library'}">← Quay lại chọn từ</button>
+  `;
+}
+
+// ---------- Danh sách từ của nhóm ----------
+function viewGroupWords(){
+  const ws = groupWords().slice().sort((a,b) => Number(isMastered(a.en)) - Number(isMastered(b.en)));
+  const p = groupProgress();
+  const rows = ws.map(w => {
+    const m = isMastered(w.en);
+    const streak = S.mastery[w.en.toLowerCase()] || 0;
+    const isFav = S.favorites.has(w.en.toLowerCase());
+    return `<div class="word-row">
+      <div class="word-row__main">
+        <div class="word-row__en">${escapeHtml(cleanEn(w.en))} ${m ? '<span class="badge badge-lvl1" style="margin-left:6px;">✓ Đã thuộc</span>' : `<span class="badge badge-lvl2" style="margin-left:6px;">${streak}/${MASTER_AT}</span>`}</div>
+        <div class="word-row__vn">${escapeHtml(w.vn)}</div>
+      </div>
+      <div class="word-row__actions">
+        <button class="iconbtn small" data-action="speak" data-text="${escapeHtml(cleanEn(w.en))}">🔊</button>
+        <button class="iconbtn small ${isFav?'on':''}" data-action="toggle-fav" data-en="${escapeHtml(w.en)}">${isFav?'★':'☆'}</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="row-between">
+    <div><div class="eyebrow">Nhóm "${escapeHtml(S.group.name)}"</div><div class="section-title">${p.done}/${p.total} từ đã thuộc</div></div>
+  </div>
+  <div class="stack" style="margin-top:16px;">${rows}</div>
+  <button class="btn btn-ghost btn-block" style="margin-top:16px;" data-action="nav" data-view="home">← Về nhóm đang học</button>
   `;
 }
 
@@ -3245,7 +3443,7 @@ beautiful - xinh đẹp">${escapeHtml(textVal)}</textarea>
         <div class="word-row__vn">${words.length} từ</div>
       </div>
       <div class="word-row__actions">
-        <button class="btn btn-primary btn-sm" data-action="custom-practice" data-name="${escapeHtml(name)}">Luyện tập</button>
+        <button class="btn btn-primary btn-sm" data-action="custom-practice" data-name="${escapeHtml(name)}" ${S.group?'disabled title="Đang có nhóm đang học"':''}>Học bộ này</button>
         <button class="iconbtn small" data-action="custom-edit" data-name="${escapeHtml(name)}" title="Sửa">✏️</button>
         <button class="iconbtn small" data-action="custom-delete" data-name="${escapeHtml(name)}" title="Xóa">🗑️</button>
       </div>
@@ -3257,6 +3455,7 @@ beautiful - xinh đẹp">${escapeHtml(textVal)}</textarea>
     <div><div class="eyebrow">Bộ từ của tôi</div><div class="section-title">Từ vựng tự nhập</div></div>
     <button class="btn btn-primary btn-sm" data-action="custom-new">+ Tạo mới</button>
   </div>
+  ${S.group ? `<p class="error-text" style="margin-bottom:10px;">Bạn đang học nhóm "${escapeHtml(S.group.name)}". Hãy học xong hoặc thoát nhóm đó (ở trang chủ) trước khi học một bộ từ riêng.</p>` : ''}
   <p class="muted" style="font-size:13.5px; margin: 8px 0 18px;">Dán danh sách từ riêng của bạn (giáo trình, bài học trên lớp...) theo đúng định dạng của chương trình gốc: <strong>tiếng anh - tiếng việt</strong>, mỗi dòng một từ.</p>
   <div class="stack">${listRows}</div>
   `;
@@ -3517,6 +3716,7 @@ function finalizeAnswer(q, correct, remaining, meta={}){
   const score = correct ? computeScore(remaining, sess.timeLimit) : 0.0;
   sess.scores.push(score);
   if (correct) markHeal(q.word); else { markWrong(q.word); sess.wrongWords.push(q.word); }
+  recordProgress(q.word, correct);
   lockQuestionUI(q, meta);
   renderFeedback(q, correct, score, meta.isTimeout);
   sess.advanceHandle = setTimeout(() => { if (S.session === sess) advanceQuestion(); }, correct ? 750 : 1450);
@@ -3588,7 +3788,8 @@ function finishSession(){
   S.stats.totalAttempts += scores.length;
   S.stats.totalCorrect += scores.filter(s=>s>0).length;
   bumpStreakAndXp(xpGain);
-  persistStats(); persistMistakes();
+  persistStats(); persistMistakes(); persistMastery();
+  checkGroupComplete();
   S.lastResult = {
     avg, rating, xpGain, count: scores.length,
     wrongWords: dedupeByEn(sess.wrongWords),
@@ -3637,11 +3838,12 @@ function viewResults(){
   <div class="stack">${wrongRows}</div>
   ` : `<div class="empty-state" style="padding:26px 20px;"><div class="empty-state__icon">🎉</div>Không sai từ nào — xuất sắc!</div>`}
 
+  ${groupBannerHtml()}
   <div class="grid grid-2" style="margin-top:24px;">
     <button class="btn btn-primary btn-block" data-action="result-retry">↻ Làm lại</button>
     <button class="btn btn-secondary btn-block" data-action="result-change-setup">⚙️ Đổi chế độ</button>
   </div>
-  <button class="btn btn-ghost btn-block" style="margin-top:10px;" data-action="nav" data-view="home">← Về trang chủ</button>
+  <button class="btn btn-ghost btn-block" style="margin-top:10px;" data-action="nav" data-view="home">← Về nhóm đang học</button>
   `;
 }
 
@@ -3721,12 +3923,14 @@ function advanceFlashcard(){
     bumpStreakAndXp(0);   // học xong một bộ flashcard cũng tính là đã học trong ngày
     persistStats();
   }
-  persistMistakes();
+  persistMistakes(); persistMastery();
+  if (fs.index >= fs.words.length) checkGroupComplete();
   render();
 }
 function cardKnow(){
   const fs = S.flashSession; if (!fs) return;
   markHeal(fs.words[fs.index]);
+  recordProgress(fs.words[fs.index], true);
   fs.knowCount++;
   advanceFlashcard();
 }
@@ -3734,6 +3938,7 @@ function cardDontKnow(){
   const fs = S.flashSession; if (!fs) return;
   const w = fs.words[fs.index];
   markWrong(w);
+  recordProgress(w, false);
   fs.missed = fs.missed || [];
   fs.missed.push(w);
   advanceFlashcard();
@@ -3748,10 +3953,10 @@ function exitFlashcards(){ S.flashSession = null; navigate('home'); }
 
 // ---------- Mistakes ----------
 function viewMistakes(){
-  const list = mistakeList();
+  const list = groupMistakes();
   if (!list.length){
     return `<div class="empty-state"><div class="empty-state__icon">🎉</div>Không có từ nào cần ôn lại — bạn đang học rất tốt!
-      <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="library">Học thêm từ mới</button></div></div>`;
+      <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="home">← Về nhóm đang học</button></div></div>`;
   }
   const rows = list.map(m => {
     const isFav = S.favorites.has(m.en.toLowerCase());
@@ -3771,18 +3976,18 @@ function viewMistakes(){
     <div><div class="eyebrow">Ôn tập thông minh</div><div class="section-title">${list.length} từ hay sai</div></div>
     <button class="btn btn-primary btn-sm" data-action="mistakes-practice">Ôn ngay →</button>
   </div>
-  <p class="muted" style="font-size:13.5px; margin:8px 0 16px;">Mỗi lần trả lời sai, từ sẽ xuất hiện ở đây. Trả lời đúng nhiều lần liên tiếp để từ tự biến mất khỏi danh sách.</p>
+  <p class="muted" style="font-size:13.5px; margin:8px 0 16px;">Chỉ hiện các từ thuộc nhóm đang học. Mỗi lần sai, số lần sai tăng thêm 1; mỗi lần đúng giảm 1, về 0 thì từ biến mất khỏi danh sách.</p>
   <div class="stack">${rows}</div>
   `;
 }
 
 // ---------- Favorites ----------
 function viewFavorites(){
-  const list = favoriteWords();
+  const list = groupFavorites();
   if (!list.length){
     return `<div class="empty-state"><div class="empty-state__icon">⭐</div>Chưa có từ yêu thích nào.
-      <p class="muted" style="font-size:13px; margin-top:6px;">Bấm ☆ khi duyệt thư viện hoặc làm bài để lưu từ khó nhớ vào đây.</p>
-      <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="library">Duyệt thư viện</button></div></div>`;
+      <p class="muted" style="font-size:13px; margin-top:6px;">Bấm ☆ khi học để lưu từ khó nhớ của nhóm vào đây.</p>
+      <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="groupwords">Xem danh sách từ của nhóm</button></div></div>`;
   }
   const rows = list.map(w => `<div class="word-row">
       <div class="word-row__main">
@@ -3824,6 +4029,9 @@ function viewStats(){
     <label>Cấp độ ${lvl.level} · còn ${lvl.need-lvl.into} XP để lên cấp</label>
     <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${lvl.pct}%; background:var(--cyan);"></div></div>
   </div>
+
+  ${S.group ? (()=>{ const gp = groupProgress(); return `<div class="field" style="margin-top:18px;"><label>Nhóm đang học: ${escapeHtml(S.group.name)} · ${gp.done}/${gp.total} từ đã thuộc</label><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${gp.pct}%; background:var(--green);"></div></div></div>`; })() : ''}
+  <p class="muted" style="font-size:13px; margin-top:10px;">Số nhóm đã hoàn thành: <strong>${S.stats.groupsCompleted || 0}</strong></p>
 
   <div class="section-head"><div><div class="eyebrow">Kho từ vựng</div><div class="section-title">Thư viện theo cấp độ</div></div></div>
   <div class="stack">
@@ -3917,10 +4125,37 @@ function handleAction(action, dataset, node){
     case 'toggle-fav': toggleFavorite(dataset.en); render(); break;
 
     // ---- home ----
-    case 'start-flashcards-quick': {
-      const words = quickFlashcardWords();
-      S.flashSession = { words: shuffleArray(words), index:0, flipped:false, knowCount:0, total: words.length, sourceLabel: 'Gợi ý nhanh cho bạn' };
+    case 'group-flash': {
+      if (!S.group) break;
+      const all = groupWords(), todo = groupTodoWords();
+      const words = sampleArray(todo.length ? todo : all, 30);
+      S.flashSession = { words: shuffleArray(words), index:0, flipped:false, knowCount:0, total: words.length, sourceLabel: S.group.name };
       navigate('flashcards');
+      break;
+    }
+    case 'group-practice': {
+      if (!S.group) break;
+      const todo = groupTodoWords();
+      const scope = todo.length ? 'todo' : 'all';
+      setPendingSource(scope === 'todo' ? todo : groupWords(), S.group.name, { kind:'group', scope });
+      navigate('setup');
+      break;
+    }
+    case 'setup-set-scope': {
+      if (!S.group) break;
+      const todo = groupTodoWords();
+      const scope = (dataset.scope === 'all' || !todo.length) ? 'all' : 'todo';
+      setPendingSource(scope === 'all' ? groupWords() : todo, S.group.name, { kind:'group', scope });
+      render();
+      break;
+    }
+    case 'group-set-size': S.draftSize = Number(dataset.count); render(); break;
+    case 'group-start': createGroupFromDraft(); toast('Bắt đầu nhóm mới. Chúc bạn học tốt!'); navigate('home'); break;
+    case 'group-leave': {
+      if (!S.group) break;
+      const gp = groupProgress();
+      if (gp.complete) leaveGroup();
+      else showConfirm(`Bạn mới thuộc ${gp.done}/${gp.total} từ của nhóm "${S.group.name}". Thoát bây giờ? Các từ đã thuộc vẫn được ghi nhớ.`, leaveGroup, 'Thoát nhóm');
       break;
     }
 
@@ -3934,8 +4169,9 @@ function handleAction(action, dataset, node){
       if (!words.length) break;
       const levelLabel = S.library.level==='all' ? 'Mọi cấp độ' : levelName(S.library.level);
       const catLabel = S.library.cat==='all' ? 'mọi chủ đề' : catName(S.library.cat);
-      setPendingSource(words, `${levelLabel} · ${catLabel}`);
-      navigate('setup');
+      S.draft = { label: `${levelLabel} · ${catLabel}`, words, custom: false };
+      S.draftSize = Math.min(20, words.length);
+      navigate('newgroup');
       break;
     }
 
@@ -3955,10 +4191,12 @@ function handleAction(action, dataset, node){
     case 'custom-edit': S.editingListName = dataset.name; render(); break;
     case 'custom-cancel-edit': S.editingListName = null; render(); break;
     case 'custom-practice': {
+      if (S.group){ toast('Hãy học xong hoặc thoát nhóm hiện tại trước.'); break; }
       const words = S.customLists[dataset.name];
       if (!words) break;
-      setPendingSource(words.map(w => ({...w, level:0, cat:'custom'})), dataset.name);
-      navigate('setup');
+      S.draft = { label: dataset.name, words: words.map(w => ({...w, level:0, cat:'custom'})), custom: true };
+      S.draftSize = Math.min(20, words.length);
+      navigate('newgroup');
       break;
     }
     case 'custom-delete': {
@@ -4019,13 +4257,14 @@ function handleAction(action, dataset, node){
 
     // ---- mistakes / favorites ----
     case 'mistakes-practice': {
-      const list = mistakeList().map(m => VOCAB_BY_EN.get(m.en.toLowerCase()) || m);
-      setPendingSource(list, 'Từ hay sai');
+      const byKey = new Map(groupWords().map(w => [w.en.toLowerCase(), w]));
+      const list = groupMistakes().map(m => byKey.get(m.en.toLowerCase()) || m);
+      setPendingSource(list, 'Từ hay sai trong nhóm');
       navigate('setup');
       break;
     }
     case 'favorites-practice': {
-      setPendingSource(favoriteWords(), 'Từ yêu thích');
+      setPendingSource(groupFavorites(), 'Từ yêu thích trong nhóm');
       navigate('setup');
       break;
     }
@@ -4099,18 +4338,22 @@ document.addEventListener('keydown', (e) => {
 async function boot(){
   const defaults = STATS_DEFAULTS;
   try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-  const [stats, favorites, mistakes, customLists, theme] = await Promise.all([
+  const [stats, favorites, mistakes, customLists, theme, group, mastery] = await Promise.all([
     loadKey('stats', defaults),
     loadKey('favorites', []),
     loadKey('mistakes', {}),
     loadKey('customLists', {}),
     loadKey('theme', 'dark'),
+    loadKey('group', null),
+    loadKey('mastery', {}),
   ]);
   S.stats = Object.assign({}, defaults, stats);
   S.favorites = new Set(favorites);
   S.mistakes = mistakes || {};
   S.customLists = customLists || {};
   S.theme = theme === 'light' ? 'light' : 'dark';
+  S.group = validateGroup(group);
+  S.mastery = (mastery && typeof mastery === 'object') ? mastery : {};
   document.documentElement.setAttribute('data-theme', S.theme);
   booted = true;
   if (!HAS_LS) warnStorage();

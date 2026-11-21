@@ -1,7 +1,7 @@
 // Service worker cho english://master
 // Mỗi lần sửa index.html và đẩy lên GitHub, hãy tăng số phiên bản bên dưới
 // để thiết bị tải bản mới và dọn cache cũ.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = 'english-master-' + VERSION;
 const CORE = [
   './',
