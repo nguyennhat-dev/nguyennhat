@@ -1,0 +1,4135 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0A0E13"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="English Master"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>english://master — Học hơn 2.400 từ vựng tiếng Anh</title>
+<meta name="description" content="Luyện từ vựng tiếng Anh từ Cơ bản đến Nâng cao với 8 chế độ luyện tập, thư viện hơn 2.400 từ kèm câu ví dụ, collocation, cụm động từ, flashcard, và ôn tập thông minh."/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2300CCFF'/%3E%3Cstop offset='1' stop-color='%23FF4FA3'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='monospace' font-weight='800' font-size='58' fill='%2306141A' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E"/>
+<style>
+/* ============================================================
+   ENGLISH://MASTER — Design system
+   Signature idea: this app is a terminal program that learned
+   to be a website. The color palette, the "window chrome" on
+   every panel, and the block-segment timer bar are all direct
+   descendants of the original Python CLI's ANSI colors and
+   progress bar. Everything else stays quiet around them.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-body: 'Be Vietnam Pro', -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+
+  --cyan: #00CCFF;
+  --cyan-ink: #062229;
+  --green: #35E27A;
+  --green-ink: #04180D;
+  --yellow: #FFC531;
+  --yellow-ink: #241900;
+  --red: #FF5C5C;
+  --red-ink: #250505;
+  --orange: #FF8A3D;
+  --pink: #FF4FA3;
+
+  --shadow: 0 8px 24px -8px rgba(0,0,0,.35);
+  --shadow-sm: 0 2px 8px -2px rgba(0,0,0,.3);
+}
+
+[data-theme="dark"]{
+  --bg: #0A0E13;
+  --bg-elevated: #10161D;
+  --surface: #131A22;
+  --surface-hover: #1A2330;
+  --surface-active: #202B3A;
+  --border: #212C39;
+  --border-strong: #324255;
+  --text: #EAEFF4;
+  --text-muted: #90A0B0;
+  --text-faint: #576677;
+  --scrim: rgba(5,8,12,.7);
+}
+
+[data-theme="light"]{
+  --bg: #F3F6F9;
+  --bg-elevated: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-hover: #EDF2F7;
+  --surface-active: #E3EAF0;
+  --border: #DCE4EB;
+  --border-strong: #C1CCD6;
+  --text: #101820;
+  --text-muted: #57687A;
+  --text-faint: #8A97A3;
+  --scrim: rgba(20,28,38,.45);
+
+  --cyan: #0089B8;
+  --green: #1C9A56;
+  --yellow: #A66900;
+  --red: #D93A3A;
+  --orange: #C25A16;
+  --pink: #C93A88;
+}
+
+*{ box-sizing: border-box; }
+html{ -webkit-text-size-adjust: 100%; }
+body{
+  margin:0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,h4{ margin:0; font-family: var(--font-mono); letter-spacing: -0.01em; }
+p{ margin:0; }
+button{ font-family: inherit; }
+input, textarea{ font-family: inherit; }
+::selection{ background: var(--cyan); color: var(--cyan-ink); }
+
+/* Respect reduced motion everywhere */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* Focus visibility */
+:focus-visible{ outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- Layout shell ---------- */
+#app{ min-height: 100vh; display:flex; flex-direction:column; }
+
+.topbar{
+  position: sticky; top:0; z-index: 40;
+  display:flex; align-items:center; justify-content:space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar__brand{ display:flex; align-items:center; gap:9px; cursor:pointer; background:none; border:none; color:inherit; padding:0; }
+.topbar__brand-mark{
+  width:30px; height:30px; border-radius: 8px;
+  background: linear-gradient(145deg, var(--cyan), var(--pink));
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-mono); font-weight:800; color:#04141A; font-size:15px;
+  flex-shrink: 0;
+}
+.topbar__brand-text{ font-family: var(--font-mono); font-weight:700; font-size:15px; letter-spacing:-0.01em; }
+.topbar__brand-text .cursor{ display:inline-block; width:8px; height:15px; background: var(--cyan); margin-left:3px; vertical-align:-2px; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink{ 50%{ opacity:0; } }
+
+.topbar__actions{ display:flex; align-items:center; gap:8px; }
+
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 6px 10px; border-radius: 999px;
+  background: var(--surface); border:1px solid var(--border);
+  font-family: var(--font-mono); font-size: 12.5px; font-weight:600; color: var(--text-muted);
+}
+.pill strong{ color: var(--text); font-weight:700; }
+.pill.streak{ color: var(--orange); border-color: color-mix(in srgb, var(--orange) 35%, var(--border)); }
+.pill.streak strong{ color: var(--orange); }
+
+.iconbtn{
+  width:36px; height:36px; border-radius: 8px;
+  background: var(--surface); border:1px solid var(--border);
+  color: var(--text-muted);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition: background .15s, color .15s, border-color .15s;
+  flex-shrink:0;
+}
+.iconbtn:hover{ background: var(--surface-hover); color: var(--text); }
+
+main{ flex:1; width:100%; max-width: 880px; margin: 0 auto; padding: 20px 16px 96px; }
+
+/* ---------- Terminal window panel (signature component) ---------- */
+.term{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.term__bar{
+  display:flex; align-items:center; gap:10px;
+  padding: 9px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
+.term__dots{ display:flex; gap:5px; }
+.term__dot{ width:8px; height:8px; border-radius:2px; }
+.term__dot:nth-child(1){ background: var(--cyan); }
+.term__dot:nth-child(2){ background: var(--yellow); }
+.term__dot:nth-child(3){ background: var(--pink); }
+.term__path{ font-family: var(--font-mono); font-size: 12px; color: var(--text-faint); }
+.term__body{ padding: 22px; }
+.term__body.tight{ padding: 14px 16px; }
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding: 12px 20px; border-radius: var(--radius);
+  font-weight: 700; font-size: 14.5px; letter-spacing: 0.01em;
+  border: 1px solid transparent; cursor: pointer;
+  transition: transform .08s ease, filter .15s, background .15s, border-color .15s;
+  user-select: none;
+}
+.btn:active{ transform: scale(0.98); }
+.btn:disabled{ opacity: .45; cursor: not-allowed; }
+.btn-block{ width:100%; }
+.btn-lg{ padding: 15px 22px; font-size: 16px; }
+.btn-primary{ background: var(--cyan); color: var(--cyan-ink); }
+.btn-primary:hover:not(:disabled){ filter: brightness(1.08); }
+.btn-secondary{ background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+.btn-secondary:hover:not(:disabled){ background: var(--surface-hover); }
+.btn-ghost{ background: transparent; color: var(--text-muted); border-color: var(--border); }
+.btn-ghost:hover:not(:disabled){ color: var(--text); border-color: var(--border-strong); }
+.btn-danger{ background: var(--red); color: #2a0808; }
+.btn-danger:hover:not(:disabled){ filter: brightness(1.08); }
+.btn-pink{ background: var(--pink); color: #2a0619; }
+.btn-sm{ padding: 8px 13px; font-size: 13px; border-radius: var(--radius-sm); }
+
+/* ---------- Cards / grids ---------- */
+.grid{ display:grid; gap:12px; }
+.grid-2{ grid-template-columns: repeat(2, 1fr); }
+.grid-3{ grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 640px){ .grid-3{ grid-template-columns: repeat(2, 1fr); } }
+
+.action-card{
+  display:flex; flex-direction:column; gap:10px;
+  text-align:left; padding:16px; border-radius: var(--radius);
+  background: var(--surface); border:1px solid var(--border);
+  cursor:pointer; transition: border-color .15s, background .15s, transform .08s;
+}
+.action-card:hover{ border-color: var(--border-strong); background: var(--surface-hover); }
+.action-card:active{ transform: scale(0.99); }
+.action-card__icon{
+  width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-size:18px; background: var(--bg-elevated); border:1px solid var(--border);
+}
+.action-card__title{ font-weight:700; font-size:15px; }
+.action-card__sub{ font-size:13px; color: var(--text-muted); line-height:1.4; }
+
+.stat-strip{ display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; }
+.stat-chip{
+  flex:1; min-width: 108px;
+  padding:12px 14px; border-radius: var(--radius);
+  background: var(--surface); border:1px solid var(--border);
+}
+.stat-chip__value{ font-family: var(--font-mono); font-weight:800; font-size:22px; }
+.stat-chip__label{ font-size:12px; color: var(--text-muted); margin-top:2px; }
+
+/* ---------- Section headers ---------- */
+.section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin: 28px 0 12px; }
+.section-head:first-child{ margin-top:0; }
+.eyebrow{ font-family: var(--font-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color: var(--cyan); font-weight:700; }
+.section-title{ font-size:18px; font-weight:700; margin-top:4px; }
+.link-more{ font-size:13px; color: var(--text-muted); background:none; border:none; cursor:pointer; font-weight:600; }
+.link-more:hover{ color: var(--cyan); }
+
+/* ---------- Badges / tags ---------- */
+.badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:11.5px; font-weight:700; font-family: var(--font-mono); }
+.badge-lvl1{ background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+.badge-lvl2{ background: color-mix(in srgb, var(--yellow) 18%, transparent); color: var(--yellow); }
+.badge-lvl3{ background: color-mix(in srgb, var(--pink) 18%, transparent); color: var(--pink); }
+[data-theme="light"] .badge-lvl2{ background: color-mix(in srgb, var(--yellow) 16%, transparent); }
+
+.chip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 7px 13px; border-radius:999px; font-size:13px; font-weight:600;
+  background: var(--surface); border:1px solid var(--border); color: var(--text-muted);
+  cursor:pointer; white-space:nowrap; transition: all .15s;
+}
+.chip:hover{ border-color: var(--border-strong); color: var(--text); }
+.chip.active{ background: var(--cyan); border-color: var(--cyan); color: var(--cyan-ink); }
+.chip-row{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin: 0 -16px; padding-left:16px; padding-right:16px; }
+.chip-row::-webkit-scrollbar{ display:none; }
+
+/* ---------- Forms ---------- */
+.field{ margin-bottom:16px; }
+.field label{ display:block; font-size:13px; font-weight:600; color: var(--text-muted); margin-bottom:7px; }
+.input, textarea.input{
+  width:100%; padding: 13px 14px; border-radius: var(--radius);
+  background: var(--bg-elevated); border:1.5px solid var(--border-strong); color: var(--text);
+  font-size:16px; transition: border-color .15s;
+}
+.input:focus{ border-color: var(--cyan); outline:none; }
+textarea.input{ resize: vertical; min-height:120px; font-family: var(--font-mono); font-size:14px; line-height:1.6; }
+.hint{ font-size:12.5px; color: var(--text-faint); margin-top:6px; }
+.error-text{ font-size:12.5px; color: var(--red); margin-top:6px; font-weight:600; }
+
+/* ---------- Word library list ---------- */
+.word-row{
+  display:flex; align-items:center; gap:12px;
+  padding: 13px 14px; border-radius: var(--radius);
+  background: var(--surface); border:1px solid var(--border);
+  margin-bottom:8px;
+}
+.word-row__main{ flex:1; min-width:0; }
+.word-row__en{ font-family: var(--font-mono); font-weight:700; font-size:15.5px; }
+.word-row__vn{ font-size:13.5px; color: var(--text-muted); margin-top:2px; }
+.word-row__cat{ font-size:11.5px; color: var(--text-faint); margin-top:3px; }
+.word-row__actions{ display:flex; gap:6px; flex-shrink:0; }
+.iconbtn.small{ width:32px; height:32px; }
+.iconbtn.on{ color: var(--yellow); border-color: color-mix(in srgb, var(--yellow) 40%, var(--border)); }
+
+/* ---------- Quiz screen ---------- */
+.quiz-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; }
+.quiz-progress{ font-family: var(--font-mono); font-size:13px; color: var(--text-muted); font-weight:600; }
+.quiz-mode-tag{ font-family: var(--font-mono); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; background: var(--surface-hover); border:1px solid var(--border); color: var(--text-muted); }
+
+.timerbar{ display:flex; gap:3px; margin-bottom:8px; }
+.timerbar__seg{ flex:1; height:9px; border-radius:2px; background: var(--border); transition: background .12s linear; }
+.timerbar__seg.f-good{ background: var(--green); }
+.timerbar__seg.f-warn{ background: var(--yellow); }
+.timerbar__seg.f-danger{ background: var(--red); }
+.timer-readout{ display:flex; justify-content:space-between; font-family: var(--font-mono); font-size:12px; color: var(--text-faint); margin-bottom:20px; }
+.timer-readout.danger{ color: var(--red); }
+
+.prompt-word{
+  font-family: var(--font-mono); font-weight:800; font-size: clamp(26px, 6vw, 38px);
+  text-align:center; letter-spacing:0.01em; margin: 6px 0 22px; word-break: break-word;
+}
+.prompt-sub{ text-align:center; color: var(--text-muted); font-size:13px; margin-top:-14px; margin-bottom:20px; }
+
+.tile-row{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:22px; }
+.tile{
+  min-width:34px; height:44px; padding: 0 4px; border:2px solid var(--border-strong); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-mono); font-weight:700; font-size:17px; background: var(--bg-elevated);
+}
+.tile.blank{ border-color: var(--cyan); color: var(--cyan); background: color-mix(in srgb, var(--cyan) 8%, var(--bg-elevated)); }
+.tile.space{ border:none; background:none; width:16px; min-width:16px; }
+
+.mc-options{ display:grid; gap:10px; }
+.mc-opt{
+  display:flex; align-items:center; gap:12px; text-align:left;
+  padding: 15px 16px; border-radius: var(--radius); background: var(--surface);
+  border:1.5px solid var(--border); cursor:pointer; font-size:15px; font-weight:600;
+  transition: border-color .12s, background .12s;
+}
+.mc-opt:hover{ border-color: var(--border-strong); }
+.mc-opt__key{ font-family: var(--font-mono); font-size:12px; font-weight:800; color: var(--text-faint); width:20px; flex-shrink:0; }
+.mc-opt.correct{ border-color: var(--green); background: color-mix(in srgb, var(--green) 12%, var(--surface)); }
+.mc-opt.wrong{ border-color: var(--red); background: color-mix(in srgb, var(--red) 12%, var(--surface)); }
+.mc-opt:disabled, .mc-opt.disabled{ cursor:default; }
+
+.tf-row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+.tf-btn{ padding: 22px 12px; border-radius: var(--radius); font-family: var(--font-mono); font-weight:800; font-size:17px; border:1.5px solid var(--border-strong); cursor:pointer; background: var(--surface); transition: all .12s; }
+.tf-btn.tf-true{ color: var(--green); }
+.tf-btn.tf-false{ color: var(--red); }
+.tf-btn.correct{ background: color-mix(in srgb, var(--green) 15%, var(--surface)); border-color: var(--green); }
+.tf-btn.wrong{ background: color-mix(in srgb, var(--red) 15%, var(--surface)); border-color: var(--red); }
+
+.answer-row{ display:flex; gap:10px; }
+.answer-row .input{ flex:1; }
+
+.feedback-banner{
+  margin-top:16px; padding:13px 16px; border-radius: var(--radius);
+  font-size:14px; font-weight:600; display:flex; align-items:center; gap:10px;
+  animation: rise .18s ease;
+}
+@keyframes rise{ from{ opacity:0; transform: translateY(6px);} to{ opacity:1; transform:none; } }
+.feedback-banner.ok{ background: color-mix(in srgb, var(--green) 15%, var(--surface)); color: var(--green); border:1px solid color-mix(in srgb, var(--green) 40%, var(--border)); }
+.feedback-banner.bad{ background: color-mix(in srgb, var(--red) 15%, var(--surface)); color: var(--red); border:1px solid color-mix(in srgb, var(--red) 40%, var(--border)); }
+
+.speak-btn{
+  width:44px; height:44px; border-radius:999px; flex-shrink:0;
+  background: var(--surface); border:1.5px solid var(--border-strong); color: var(--cyan);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.speak-btn:hover{ background: var(--surface-hover); }
+.speak-btn.lg{ width:60px; height:60px; margin: 0 auto 20px; }
+
+/* ---------- Flashcard ---------- */
+.flashcard-wrap{ perspective: 1200px; margin-bottom:22px; }
+.flashcard{
+  position:relative; height: 220px; border-radius: var(--radius-lg);
+  transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.8,.2,1);
+  cursor:pointer;
+}
+.flashcard.flipped{ transform: rotateY(180deg); }
+.flashcard__face{
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius: var(--radius-lg); border:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  padding: 20px; text-align:center;
+  background: var(--surface); box-shadow: var(--shadow-sm);
+}
+.flashcard__face--back{ transform: rotateY(180deg); background: var(--bg-elevated); }
+.flashcard.has-ex{ height: 320px; }
+.flashcard__face--back{ overflow-y:auto; padding-bottom:40px; }
+.flashcard__vn{ font-family: var(--font-body); font-size:22px; line-height:1.3; }
+.flashcard__ex{ width:100%; padding:10px 12px; border-radius: var(--radius); background: var(--surface); border:1px solid var(--border); }
+.flashcard__ex-en{ font-size:15px; line-height:1.45; font-weight:500; }
+.flashcard__ex-vn{ font-size:13px; line-height:1.4; color: var(--text-muted); margin-top:4px; }
+.word-row__ex{ font-size:12.5px; line-height:1.4; color: var(--text-faint); font-style:italic; margin-top:4px; }
+.flashcard__word{ font-family: var(--font-mono); font-weight:800; font-size: clamp(22px,5vw,30px); }
+.flashcard__hint{ font-size:12px; color: var(--text-faint); position:absolute; bottom:14px; }
+
+/* ---------- Results screen ---------- */
+.result-hero{ text-align:center; padding: 30px 20px; }
+.result-score{ font-family: var(--font-mono); font-weight:800; font-size: 52px; line-height:1; }
+.result-label{ margin-top:10px; font-weight:800; font-size:16px; letter-spacing:.03em; }
+
+.progress-bar-outer{ height:8px; border-radius:999px; background: var(--border); overflow:hidden; margin: 18px 0 6px; }
+.progress-bar-inner{ height:100%; border-radius:999px; transition: width .5s ease; }
+
+/* ---------- Misc ---------- */
+.divider{ height:1px; background: var(--border); margin: 20px 0; border:none; }
+.muted{ color: var(--text-muted); }
+.center{ text-align:center; }
+.row{ display:flex; align-items:center; }
+.row-between{ display:flex; align-items:center; justify-content:space-between; }
+.gap-8{ gap:8px; } .gap-10{ gap:10px; } .gap-12{ gap:12px; }
+.stack{ display:flex; flex-direction:column; gap:10px; }
+.empty-state{ text-align:center; padding: 44px 20px; color: var(--text-muted); }
+.empty-state__icon{ font-size:34px; margin-bottom:10px; }
+
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+  background: var(--bg-elevated); border:1px solid var(--border-strong); color: var(--text);
+  padding:12px 18px; border-radius: 999px; font-size:13.5px; font-weight:600;
+  box-shadow: var(--shadow); z-index: 90; display:flex; align-items:center; gap:8px;
+  animation: toastin .2s ease;
+}
+@keyframes toastin{ from{ opacity:0; transform: translateX(-50%) translateY(8px);} to{ opacity:1; transform: translateX(-50%);} }
+
+.modal-scrim{ position:fixed; inset:0; background: var(--scrim); z-index:80; display:flex; align-items:flex-end; justify-content:center; }
+@media (min-width: 640px){ .modal-scrim{ align-items:center; } }
+.modal-sheet{ width:100%; max-width:480px; max-height:88vh; overflow:auto; background: var(--bg-elevated); border-radius: 18px 18px 0 0; border:1px solid var(--border); padding:22px; }
+@media (min-width:640px){ .modal-sheet{ border-radius: var(--radius-lg); } }
+
+.slider-row{ display:flex; align-items:center; gap:14px; }
+input[type="range"]{ flex:1; accent-color: var(--cyan); height:6px; }
+
+.corner-mark{ position:relative; }
+.corner-mark::before, .corner-mark::after{
+  content:''; position:absolute; width:16px; height:16px; border-color: var(--cyan); opacity:.5;
+}
+.corner-mark::before{ top:-1px; left:-1px; border-top:2px solid; border-left:2px solid; border-top-left-radius:6px; }
+.corner-mark::after{ bottom:-1px; right:-1px; border-bottom:2px solid; border-right:2px solid; border-bottom-right-radius:6px; }
+
+.skeleton{ background: linear-gradient(90deg, var(--surface) 0%, var(--surface-hover) 50%, var(--surface) 100%); background-size: 200% 100%; animation: shimmer 1.3s infinite; border-radius: var(--radius); }
+@keyframes shimmer{ from{ background-position: 200% 0; } to{ background-position: -200% 0; } }
+
+/* utility */
+.hidden{ display:none !important; }
+.text-cyan{ color: var(--cyan); } .text-green{ color: var(--green); } .text-yellow{ color: var(--yellow); }
+.text-red{ color: var(--red); } .text-pink{ color: var(--pink); } .text-orange{ color: var(--orange); }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; color:#00CCFF; background:#0A0E13;">
+    booting english://master...
+  </div>
+</div>
+<script src="vocab-extra.js"></script>
+<script>
+// ============================================================
+// CORE.JS — Pure game-logic functions (no DOM), ported & improved
+// from the original Python CLI (tao_tu_khuyet, tao_tu_giai_ma,
+// tinh_diem_cau_hoi, tao_cau_hoi, xuly_cau_dung_sai, ...)
+// Kept dependency-free so it can be unit-tested with plain Node.
+// ============================================================
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function sampleArray(arr, n) {
+  return shuffleArray(arr).slice(0, Math.min(n, arr.length));
+}
+
+// Matches Python: diem = 5.0 + 5.0 * (time_remaining/time_limit), round 1dp
+function computeScore(timeRemaining, timeLimit) {
+  if (!timeLimit || timeLimit <= 0) return 10.0;
+  const ratio = Math.max(0, Math.min(1, timeRemaining / timeLimit));
+  const score = 5.0 + 5.0 * ratio;
+  return Math.round(score * 10) / 10;
+}
+
+// Matches Python thresholds in nhap_co_dem_nguoc: >50% green, >20% yellow, else red
+function getTimerZone(timeRemaining, timeLimit) {
+  if (!timeLimit || timeLimit <= 0) return 'good';
+  const ratio = timeRemaining / timeLimit;
+  if (ratio > 0.5) return 'good';
+  if (ratio > 0.2) return 'warn';
+  return 'danger';
+}
+
+// Matches Python hien_thi_ket_qua_diem thresholds
+function getRating(avgScore) {
+  if (avgScore >= 9.0) return { label: 'XUẤT SẮC', emoji: '🏆', zone: 'good' };
+  if (avgScore >= 8.0) return { label: 'GIỎI', emoji: '🌟', zone: 'info' };
+  if (avgScore >= 6.5) return { label: 'KHÁ', emoji: '👍', zone: 'warn' };
+  return { label: 'CẦN CỐ GẮNG', emoji: '💡', zone: 'danger' };
+}
+
+// --- Fill-in-the-blank: mask ~40% of alpha chars (min 1), like tao_tu_khuyet ---
+// Returns an array of {ch, masked} for every character in `word` (spaces included,
+// spaces are never masked). Works across the whole phrase, same spirit as the original.
+function maskWord(word) {
+  const chars = word.split('');
+  const n = chars.length;
+  const validIdx = [];
+  chars.forEach((c, i) => { if (/[a-zA-Z]/.test(c)) validIdx.push(i); });
+  if (validIdx.length === 0) return chars.map(c => ({ ch: c, masked: false }));
+
+  let numToMask = n <= 2 ? 1 : Math.max(1, Math.floor(n * 0.4));
+  numToMask = Math.min(numToMask, validIdx.length);
+  const maskedIdx = new Set(sampleArray(validIdx, numToMask));
+
+  return chars.map((c, i) => ({ ch: c, masked: maskedIdx.has(i) }));
+}
+
+// --- Unscramble: shuffle letters WITHIN each word of the phrase, keep spaces fixed.
+// Improvement over the original (which shuffled the whole phrase incl. spaces,
+// making multi-word idioms nearly unsolvable). Falls back cleanly for single words.
+function shuffleWordPerToken(word) {
+  const tokens = word.split(' ');
+  const shuffledTokens = tokens.map(tok => {
+    const chars = tok.split('');
+    if (chars.length <= 1) return chars;
+    let attempt = 0;
+    let shuffled = chars.slice();
+    while (shuffled.join('') === chars.join('') && attempt < 10) {
+      shuffled = shuffleArray(chars);
+      attempt++;
+    }
+    return shuffled;
+  });
+  return shuffledTokens; // array of char-arrays, one per word-token
+}
+
+// --- Multiple choice question builder, mirrors tao_cau_hoi (per word) ---
+function buildMCQuestion(en, vn, vnPool) {
+  const incorrectPool = [...new Set(vnPool.filter(v => v !== vn))];
+  const numIncorrect = Math.min(3, incorrectPool.length);
+  const options = sampleArray(incorrectPool, numIncorrect);
+  options.push(vn);
+  return { en, vn, options: shuffleArray(options) };
+}
+
+// --- True/False pair builder, mirrors xuly_cau_dung_sai ---
+function buildTrueFalse(en, vn, vnPool, forceTrue) {
+  const otherOptions = vnPool.filter(v => v !== vn);
+  let isTrue = forceTrue;
+  let shownVn = vn;
+  if (forceTrue === undefined) isTrue = Math.random() < 0.5;
+  if (isTrue || otherOptions.length === 0) {
+    shownVn = vn;
+    isTrue = true;
+  } else {
+    shownVn = otherOptions[Math.floor(Math.random() * otherOptions.length)];
+  }
+  return { en, correctVn: vn, shownVn, isTrue };
+}
+
+// --- Balanced true/false flags for a session, mirrors tf_flags logic ---
+function buildBalancedTFFlags(count) {
+  const flags = [];
+  for (let i = 0; i < Math.floor(count / 2) + 1; i++) flags.push(true, false);
+  return shuffleArray(flags).slice(0, count);
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    shuffleArray, sampleArray, computeScore, getTimerZone, getRating,
+    maskWord, shuffleWordPerToken, buildMCQuestion, buildTrueFalse, buildBalancedTFFlags,
+  };
+}
+// ============================================================
+// DATA.JS — 1998-word EN-VI vocabulary bank (Beginner -> Advanced)
+// Auto-generated from a curated, deduplicated word list.
+// Format per line: english|vietnamese|level(1-3)|category_code
+// ============================================================
+
+const VOCAB_RAW = `hello|xin chào|1|greet
+hi|chào|1|greet
+goodbye|tạm biệt|1|greet
+morning|buổi sáng|1|greet
+afternoon|buổi chiều|1|greet
+evening|buổi tối|1|greet
+night|ban đêm|1|greet
+please|làm ơn|1|greet
+thanks|cảm ơn|1|greet
+sorry|xin lỗi|1|greet
+yes|vâng|1|greet
+no|không|1|greet
+welcome|chào mừng|1|greet
+name|tên|1|greet
+nice|dễ chịu|1|greet
+meet|gặp gỡ|1|greet
+question|câu hỏi|1|greet
+answer|câu trả lời|1|greet
+help|giúp đỡ|1|greet
+excuse|xin phép|1|greet
+fine|khỏe|1|greet
+okay|được|1|greet
+maybe|có thể|1|greet
+sure|chắc chắn|1|greet
+again|lần nữa|1|greet
+repeat|lặp lại|1|greet
+understand|hiểu|1|greet
+speak|nói|1|greet
+listen|lắng nghe|1|greet
+talk|nói chuyện|1|greet
+language|ngôn ngữ|1|greet
+word|từ|1|greet
+sentence|câu|1|greet
+letter|chữ cái|1|greet
+introduce|giới thiệu|1|greet
+friend|bạn|1|family
+family|gia đình|1|family
+mother|mẹ|1|family
+father|bố|1|family
+parent|phụ huynh|1|family
+child|đứa trẻ|1|family
+son|con trai|1|family
+daughter|con gái|1|family
+brother|anh trai|1|family
+sister|chị gái|1|family
+grandmother|bà|1|family
+grandfather|ông|1|family
+husband|chồng|1|family
+wife|vợ|1|family
+baby|em bé|1|family
+man|đàn ông|1|family
+woman|phụ nữ|1|family
+boy|con trai|1|family
+girl|con gái|1|family
+people|mọi người|1|family
+person|người|1|family
+adult|người lớn|1|family
+teenager|thiếu niên|1|family
+neighbor|hàng xóm|1|family
+uncle|chú|1|family
+aunt|cô|1|family
+cousin|anh chị em họ|1|family
+niece|cháu gái|1|family
+nephew|cháu trai|1|family
+twin|sinh đôi|1|family
+relative|họ hàng|1|family
+couple|cặp đôi|1|family
+love|yêu|1|family
+marry|kết hôn|1|family
+one|một|1|numtime
+two|hai|1|numtime
+three|ba|1|numtime
+four|bốn|1|numtime
+five|năm|1|numtime
+six|sáu|1|numtime
+seven|bảy|1|numtime
+eight|tám|1|numtime
+nine|chín|1|numtime
+ten|mười|1|numtime
+eleven|mười một|1|numtime
+twelve|mười hai|1|numtime
+twenty|hai mươi|1|numtime
+thirty|ba mươi|1|numtime
+hundred|một trăm|1|numtime
+thousand|một nghìn|1|numtime
+first|thứ nhất|1|numtime
+second|thứ hai|1|numtime
+third|thứ ba|1|numtime
+zero|số không|1|numtime
+number|con số|1|numtime
+time|thời gian|1|numtime
+hour|giờ|1|numtime
+minute|phút|1|numtime
+day|ngày|1|numtime
+week|tuần|1|numtime
+month|tháng|1|numtime
+year|năm|1|numtime
+today|hôm nay|1|numtime
+tomorrow|ngày mai|1|numtime
+yesterday|hôm qua|1|numtime
+now|bây giờ|1|numtime
+later|lát nữa|1|numtime
+early|sớm|1|numtime
+late|muộn|1|numtime
+monday|thứ hai|1|numtime
+tuesday|thứ ba|1|numtime
+wednesday|thứ tư|1|numtime
+thursday|thứ năm|1|numtime
+friday|thứ sáu|1|numtime
+saturday|thứ bảy|1|numtime
+sunday|chủ nhật|1|numtime
+january|tháng một|1|numtime
+february|tháng hai|1|numtime
+march|tháng ba|1|numtime
+april|tháng tư|1|numtime
+spring|mùa xuân|1|numtime
+summer|mùa hè|1|numtime
+autumn|mùa thu|1|numtime
+winter|mùa đông|1|numtime
+clock|đồng hồ|1|numtime
+calendar|lịch|1|numtime
+weekend|cuối tuần|1|numtime
+holiday|ngày lễ|1|numtime
+birthday|sinh nhật|1|numtime
+noon|buổi trưa|1|numtime
+midnight|nửa đêm|1|numtime
+red|màu đỏ|1|colorshape
+blue|màu xanh dương|1|colorshape
+green|màu xanh lá|1|colorshape
+yellow|màu vàng|1|colorshape
+black|màu đen|1|colorshape
+white|màu trắng|1|colorshape
+orange|màu cam|1|colorshape
+purple|màu tím|1|colorshape
+pink|màu hồng|1|colorshape
+brown|màu nâu|1|colorshape
+gray|màu xám|1|colorshape
+gold|màu vàng kim|1|colorshape
+circle|hình tròn|1|colorshape
+square|hình vuông|1|colorshape
+triangle|hình tam giác|1|colorshape
+rectangle|hình chữ nhật|1|colorshape
+line|đường thẳng|1|colorshape
+star|ngôi sao|1|colorshape
+heart|trái tim|1|colorshape
+shape|hình dạng|1|colorshape
+size|kích thước|1|colorshape
+big|to|1|colorshape
+small|nhỏ|1|colorshape
+round|tròn|1|colorshape
+head|đầu|1|body
+face|khuôn mặt|1|body
+eye|mắt|1|body
+ear|tai|1|body
+nose|mũi|1|body
+mouth|miệng|1|body
+tooth|răng|1|body
+tongue|lưỡi|1|body
+hair|tóc|1|body
+neck|cổ|1|body
+shoulder|vai|1|body
+arm|cánh tay|1|body
+elbow|khuỷu tay|1|body
+hand|bàn tay|1|body
+finger|ngón tay|1|body
+nail|móng tay|1|body
+chest|ngực|1|body
+back|lưng|1|body
+stomach|bụng|1|body
+leg|chân|1|body
+knee|đầu gối|1|body
+foot|bàn chân|1|body
+toe|ngón chân|1|body
+skin|da|1|body
+bone|xương|1|body
+brain|não|1|body
+blood|máu|1|body
+voice|giọng nói|1|body
+smile|nụ cười|1|body
+apple|quả táo|1|food
+banana|quả chuối|1|food
+grape|quả nho|1|food
+mango|quả xoài|1|food
+watermelon|dưa hấu|1|food
+strawberry|dâu tây|1|food
+pineapple|dứa|1|food
+lemon|chanh vàng|1|food
+coconut|dừa|1|food
+rice|cơm|1|food
+bread|bánh mì|1|food
+noodle|mì|1|food
+meat|thịt|1|food
+beef|thịt bò|1|food
+chicken|thịt gà|1|food
+pork|thịt lợn|1|food
+fish|cá|1|food
+egg|trứng|1|food
+vegetable|rau|1|food
+potato|khoai tây|1|food
+tomato|cà chua|1|food
+carrot|cà rốt|1|food
+onion|hành tây|1|food
+garlic|tỏi|1|food
+cabbage|bắp cải|1|food
+corn|ngô|1|food
+sugar|đường|1|food
+salt|muối|1|food
+pepper|hạt tiêu|1|food
+oil|dầu ăn|1|food
+milk|sữa|1|food
+water|nước|1|food
+juice|nước ép|1|food
+coffee|cà phê|1|food
+tea|trà|1|food
+soup|súp|1|food
+cake|bánh ngọt|1|food
+candy|kẹo|1|food
+chocolate|sô cô la|1|food
+ice cream|kem|1|food
+breakfast|bữa sáng|1|food
+lunch|bữa trưa|1|food
+dinner|bữa tối|1|food
+meal|bữa ăn|1|food
+snack|đồ ăn vặt|1|food
+hungry|đói|1|food
+thirsty|khát|1|food
+delicious|ngon|1|food
+sweet|ngọt|1|food
+sour|chua|1|food
+spicy|cay|1|food
+bitter|đắng|1|food
+salty|mặn|1|food
+cook|nấu ăn|1|food
+kitchen|nhà bếp|1|food
+plate|đĩa|1|food
+bowl|cái bát|1|food
+spoon|cái thìa|1|food
+fork|cái nĩa|1|food
+knife|con dao|1|food
+cup|cái cốc|1|food
+dog|con chó|1|animal
+cat|con mèo|1|animal
+bird|con chim|1|animal
+horse|con ngựa|1|animal
+cow|con bò|1|animal
+pig|con lợn|1|animal
+duck|con vịt|1|animal
+sheep|con cừu|1|animal
+goat|con dê|1|animal
+rabbit|con thỏ|1|animal
+mouse|con chuột|1|animal
+elephant|con voi|1|animal
+tiger|con hổ|1|animal
+lion|con sư tử|1|animal
+bear|con gấu|1|animal
+monkey|con khỉ|1|animal
+snake|con rắn|1|animal
+frog|con ếch|1|animal
+turtle|con rùa|1|animal
+butterfly|con bướm|1|animal
+bee|con ong|1|animal
+ant|con kiến|1|animal
+spider|con nhện|1|animal
+fly|con ruồi|1|animal
+mosquito|con muỗi|1|animal
+crab|con cua|1|animal
+shrimp|con tôm|1|animal
+whale|cá voi|1|animal
+dolphin|cá heo|1|animal
+shark|cá mập|1|animal
+fox|con cáo|1|animal
+wolf|con sói|1|animal
+deer|con hươu|1|animal
+zebra|ngựa vằn|1|animal
+giraffe|hươu cao cổ|1|animal
+kangaroo|chuột túi|1|animal
+owl|con cú|1|animal
+eagle|đại bàng|1|animal
+peacock|con công|1|animal
+squirrel|con sóc|1|animal
+pet|thú cưng|1|animal
+animal|động vật|1|animal
+house|ngôi nhà|1|house
+home|nhà|1|house
+room|căn phòng|1|house
+bedroom|phòng ngủ|1|house
+bathroom|phòng tắm|1|house
+living room|phòng khách|1|house
+door|cửa ra vào|1|house
+window|cửa sổ|1|house
+wall|bức tường|1|house
+floor|sàn nhà|1|house
+roof|mái nhà|1|house
+stairs|cầu thang|1|house
+table|cái bàn|1|house
+chair|cái ghế|1|house
+bed|cái giường|1|house
+sofa|ghế sô pha|1|house
+shelf|cái kệ|1|house
+mirror|tấm gương|1|house
+lamp|đèn|1|house
+light|ánh sáng|1|house
+key|chìa khóa|1|house
+lock|ổ khóa|1|house
+garden|khu vườn|1|house
+yard|sân|1|house
+fence|hàng rào|1|house
+box|cái hộp|1|house
+bag|cái túi|1|house
+book|quyển sách|1|house
+pen|cây bút|1|house
+pencil|bút chì|1|house
+paper|giấy|1|house
+phone|điện thoại|1|house
+computer|máy tính|1|house
+television|ti vi|1|house
+radio|đài radio|1|house
+picture|bức tranh|1|house
+clean|sạch sẽ|1|house
+dirty|bẩn|1|house
+towel|khăn tắm|1|house
+soap|xà phòng|1|house
+brush|bàn chải|1|house
+clothes|quần áo|1|clothes
+shirt|áo sơ mi|1|clothes
+t-shirt|áo phông|1|clothes
+pants|quần dài|1|clothes
+jeans|quần bò|1|clothes
+skirt|váy|1|clothes
+dress|đầm|1|clothes
+jacket|áo khoác|1|clothes
+coat|áo choàng|1|clothes
+sweater|áo len|1|clothes
+shoe|giày|1|clothes
+sock|tất|1|clothes
+hat|mũ|1|clothes
+cap|mũ lưỡi trai|1|clothes
+glove|găng tay|1|clothes
+scarf|khăn quàng|1|clothes
+belt|thắt lưng|1|clothes
+glasses|kính mắt|1|clothes
+watch|đồng hồ đeo tay|1|clothes
+ring|nhẫn|1|clothes
+necklace|dây chuyền|1|clothes
+umbrella|ô dù|1|clothes
+wear|mặc|1|clothes
+button|nút áo|1|clothes
+pocket|túi áo|1|clothes
+uniform|đồng phục|1|clothes
+boot|ủng|1|clothes
+sandals|dép|1|clothes
+pajamas|đồ ngủ|1|clothes
+school|trường học|1|school
+class|lớp học|1|school
+classroom|phòng học|1|school
+teacher|giáo viên|1|school
+student|học sinh|1|school
+lesson|bài học|1|school
+homework|bài tập về nhà|1|school
+exam|bài kiểm tra|1|school
+test|bài thi|1|school
+grade|điểm số|1|school
+subject|môn học|1|school
+math|toán học|1|school
+science|khoa học|1|school
+history|lịch sử|1|school
+geography|địa lý|1|school
+art|mỹ thuật|1|school
+music|âm nhạc|1|school
+sport|thể dục|1|school
+desk|bàn học|1|school
+blackboard|bảng đen|1|school
+chalk|phấn viết|1|school
+eraser|cục tẩy|1|school
+ruler|thước kẻ|1|school
+notebook|vở|1|school
+library|thư viện|1|school
+playground|sân chơi|1|school
+principal|hiệu trưởng|1|school
+study|học|1|school
+learn|học hỏi|1|school
+teach|dạy|1|school
+read|đọc|1|school
+write|viết|1|school
+draw|vẽ|1|school
+count|đếm|1|school
+sun|mặt trời|1|nature
+moon|mặt trăng|1|nature
+sky|bầu trời|1|nature
+cloud|đám mây|1|nature
+rain|mưa|1|nature
+snow|tuyết|1|nature
+wind|gió|1|nature
+storm|bão|1|nature
+thunder|sấm|1|nature
+lightning|sét|1|nature
+weather|thời tiết|1|nature
+hot|nóng|1|nature
+cold|lạnh|1|nature
+warm|ấm|1|nature
+cool|mát|1|nature
+tree|cây|1|nature
+flower|hoa|1|nature
+grass|cỏ|1|nature
+leaf|lá cây|1|nature
+forest|rừng|1|nature
+mountain|núi|1|nature
+river|con sông|1|nature
+lake|hồ|1|nature
+sea|biển|1|nature
+ocean|đại dương|1|nature
+beach|bãi biển|1|nature
+island|hòn đảo|1|nature
+stone|hòn đá|1|nature
+sand|cát|1|nature
+earth|trái đất|1|nature
+world|thế giới|1|nature
+car|xe hơi|1|transport
+bus|xe buýt|1|transport
+train|tàu hỏa|1|transport
+airplane|máy bay|1|transport
+bicycle|xe đạp|1|transport
+motorbike|xe máy|1|transport
+boat|thuyền|1|transport
+ship|tàu thủy|1|transport
+taxi|xe taxi|1|transport
+subway|tàu điện ngầm|1|transport
+station|nhà ga|1|transport
+airport|sân bay|1|transport
+road|con đường|1|transport
+street|đường phố|1|transport
+bridge|cây cầu|1|transport
+traffic|giao thông|1|transport
+ticket|vé|1|transport
+map|bản đồ|1|transport
+city|thành phố|1|transport
+town|thị trấn|1|transport
+village|làng|1|transport
+country|đất nước|1|transport
+market|chợ|1|transport
+store|cửa hàng|1|transport
+restaurant|nhà hàng|1|transport
+hospital|bệnh viện|1|transport
+bank|ngân hàng|1|transport
+park|công viên|1|transport
+zoo|sở thú|1|transport
+hotel|khách sạn|1|transport
+office|văn phòng|1|transport
+church|nhà thờ|1|transport
+factory|nhà máy|1|transport
+farm|nông trại|1|transport
+go|đi|1|verb1
+come|đến|1|verb1
+walk|đi bộ|1|verb1
+run|chạy|1|verb1
+jump|nhảy|1|verb1
+sit|ngồi|1|verb1
+stand|đứng|1|verb1
+sleep|ngủ|1|verb1
+wake|thức dậy|1|verb1
+eat|ăn|1|verb1
+drink|uống|1|verb1
+see|nhìn thấy|1|verb1
+look|nhìn|1|verb1
+hear|nghe thấy|1|verb1
+smell|ngửi|1|verb1
+touch|chạm|1|verb1
+open|mở|1|verb1
+close|đóng|1|verb1
+buy|mua|1|verb1
+sell|bán|1|verb1
+pay|trả tiền|1|verb1
+give|cho|1|verb1
+take|lấy|1|verb1
+bring|mang đến|1|verb1
+carry|mang|1|verb1
+put|đặt|1|verb1
+find|tìm thấy|1|verb1
+lose|mất|1|verb1
+make|làm|1|verb1
+do|làm|1|verb1
+play|chơi|1|verb1
+work|làm việc|1|verb1
+rest|nghỉ ngơi|1|verb1
+wait|chờ đợi|1|verb1
+start|bắt đầu|1|verb1
+stop|dừng lại|1|verb1
+finish|hoàn thành|1|verb1
+try|cố gắng|1|verb1
+want|muốn|1|verb1
+need|cần|1|verb1
+like|thích|1|verb1
+hate|ghét|1|verb1
+know|biết|1|verb1
+think|nghĩ|1|verb1
+remember|nhớ|1|verb1
+forget|quên|1|verb1
+ask|hỏi|1|verb1
+tell|kể|1|verb1
+call|gọi|1|verb1
+send|gửi|1|verb1
+receive|nhận|1|verb1
+show|cho xem|1|verb1
+build|xây dựng|1|verb1
+break|làm vỡ|1|verb1
+fix|sửa chữa|1|verb1
+wash|rửa|1|verb1
+cut|cắt|1|verb1
+push|đẩy|1|verb1
+pull|kéo|1|verb1
+throw|ném|1|verb1
+catch|bắt|1|verb1
+swim|bơi|1|verb1
+climb|leo trèo|1|verb1
+drive|lái xe|1|verb1
+ride|cưỡi|1|verb1
+travel|du lịch|1|verb1
+visit|thăm|1|verb1
+live|sống|1|verb1
+die|chết|1|verb1
+born|được sinh ra|1|verb1
+grow|lớn lên|1|verb1
+change|thay đổi|1|verb1
+turn|xoay|1|verb1
+move|di chuyển|1|verb1
+stay|ở lại|1|verb1
+leave|rời đi|1|verb1
+arrive|đến nơi|1|verb1
+enter|đi vào|1|verb1
+exit|đi ra|1|verb1
+good|tốt|1|adj1
+bad|xấu|1|adj1
+happy|hạnh phúc|1|adj1
+sad|buồn|1|adj1
+angry|tức giận|1|adj1
+tired|mệt mỏi|1|adj1
+new|mới|1|adj1
+old|cũ|1|adj1
+young|trẻ|1|adj1
+long|dài|1|adj1
+short|ngắn|1|adj1
+tall|cao|1|adj1
+fast|nhanh|1|adj1
+slow|chậm|1|adj1
+strong|khỏe mạnh|1|adj1
+weak|yếu|1|adj1
+easy|dễ|1|adj1
+difficult|khó|1|adj1
+heavy|nặng|1|adj1
+full|đầy|1|adj1
+empty|rỗng|1|adj1
+rich|giàu có|1|adj1
+poor|nghèo|1|adj1
+beautiful|xinh đẹp|1|adj1
+ugly|xấu xí|1|adj1
+cheap|rẻ|1|adj1
+expensive|đắt|1|adj1
+near|gần|1|adj1
+far|xa|1|adj1
+high|cao (độ cao)|1|adj1
+low|thấp|1|adj1
+wide|rộng|1|adj1
+narrow|hẹp|1|adj1
+deep|sâu|1|adj1
+shallow|nông|1|adj1
+loud|ồn ào|1|adj1
+quiet|yên tĩnh|1|adj1
+soft|mềm|1|adj1
+hard|cứng|1|adj1
+wet|ướt|1|adj1
+dry|khô|1|adj1
+smart|thông minh|1|adj1
+funny|hài hước|1|adj1
+kind|tốt bụng|1|adj1
+brave|dũng cảm|1|adj1
+lazy|lười biếng|1|adj1
+busy|bận rộn|1|adj1
+free|rảnh rỗi|1|adj1
+same|giống nhau|1|adj1
+different|khác nhau|1|adj1
+right|đúng|1|adj1
+wrong|sai|1|adj1
+true|thật|1|adj1
+false|giả|1|adj1
+important|quan trọng|1|adj1
+famous|nổi tiếng|1|adj1
+safe|an toàn|1|adj1
+dangerous|nguy hiểm|1|adj1
+simple|đơn giản|1|adj1
+special|đặc biệt|1|adj1
+job|công việc|2|work
+career|sự nghiệp|2|work
+company|công ty|2|work
+business|kinh doanh|2|work
+manager|người quản lý|2|work
+employee|nhân viên|2|work
+employer|người sử dụng lao động|2|work
+colleague|đồng nghiệp|2|work
+boss|sếp|2|work
+staff|nhân sự|2|work
+meeting|cuộc họp|2|work
+project|dự án|2|work
+deadline|hạn chót|2|work
+schedule|lịch trình|2|work
+salary|lương|2|work
+income|thu nhập|2|work
+interview|phỏng vấn|2|work
+resume|sơ yếu lý lịch|2|work
+experience|kinh nghiệm|2|work
+skill|kỹ năng|2|work
+task|nhiệm vụ|2|work
+report|báo cáo|2|work
+document|tài liệu|2|work
+email|thư điện tử|2|work
+file|tệp tin|2|work
+contract|hợp đồng|2|work
+client|khách hàng|2|work
+customer|khách hàng|2|work
+department|phòng ban|2|work
+office worker|nhân viên văn phòng|2|work
+promotion|thăng chức|2|work
+resign|từ chức|2|work
+retire|nghỉ hưu|2|work
+overtime|làm thêm giờ|2|work
+part-time|bán thời gian|2|work
+full-time|toàn thời gian|2|work
+apply|nộp đơn|2|work
+hire|thuê|2|work
+fire|sa thải|2|work
+train-verb|đào tạo|2|work
+manage|quản lý|2|work
+organize|tổ chức|2|work
+plan|lập kế hoạch|2|work
+achieve|đạt được|2|work
+goal|mục tiêu|2|work
+target|chỉ tiêu|2|work
+responsibility|trách nhiệm|2|work
+teamwork|làm việc nhóm|2|work
+performance|hiệu suất|2|work
+productivity|năng suất|2|work
+computer science|khoa học máy tính|2|tech
+internet|mạng internet|2|tech
+website|trang web|2|tech
+software|phần mềm|2|tech
+hardware|phần cứng|2|tech
+application|ứng dụng|2|tech
+device|thiết bị|2|tech
+laptop|máy tính xách tay|2|tech
+keyboard|bàn phím|2|tech
+screen|màn hình|2|tech
+password|mật khẩu|2|tech
+account|tài khoản|2|tech
+username|tên đăng nhập|2|tech
+download|tải xuống|2|tech
+upload|tải lên|2|tech
+install|cài đặt|2|tech
+update|cập nhật|2|tech
+network|mạng lưới|2|tech
+server|máy chủ|2|tech
+data|dữ liệu|2|tech
+database|cơ sở dữ liệu|2|tech
+program|chương trình|2|tech
+programmer|lập trình viên|2|tech
+code|mã lập trình|2|tech
+browser|trình duyệt|2|tech
+search engine|công cụ tìm kiếm|2|tech
+social media|mạng xã hội|2|tech
+message|tin nhắn|2|tech
+notification|thông báo|2|tech
+setting|cài đặt hệ thống|2|tech
+battery|pin|2|tech
+charger|bộ sạc|2|tech
+wireless|không dây|2|tech
+signal|tín hiệu|2|tech
+virus-tech|vi-rút máy tính|2|tech
+backup|sao lưu|2|tech
+storage|bộ nhớ lưu trữ|2|tech
+health|sức khỏe|2|health
+doctor|bác sĩ|2|health
+nurse|y tá|2|health
+patient|bệnh nhân|2|health
+medicine|thuốc|2|health
+pill|viên thuốc|2|health
+treatment|phương pháp điều trị|2|health
+disease|bệnh tật|2|health
+illness|bệnh|2|health
+symptom|triệu chứng|2|health
+pain|cơn đau|2|health
+headache|đau đầu|2|health
+fever|sốt|2|health
+cough|ho|2|health
+cold-illness|cảm lạnh|2|health
+flu|cúm|2|health
+injury|chấn thương|2|health
+wound|vết thương|2|health
+surgery|phẫu thuật|2|health
+clinic|phòng khám|2|health
+emergency|cấp cứu|2|health
+ambulance|xe cứu thương|2|health
+diet|chế độ ăn|2|health
+exercise|tập thể dục|2|health
+fit|khỏe khoắn|2|health
+weight|cân nặng|2|health
+height|chiều cao|2|health
+vitamin|vitamin|2|health
+allergy|dị ứng|2|health
+vaccine|vắc-xin|2|health
+checkup|khám sức khỏe|2|health
+recover|hồi phục|2|health
+prevent|phòng ngừa|2|health
+infection|nhiễm trùng|2|health
+dentist|nha sĩ|2|health
+pharmacy|hiệu thuốc|2|health
+trip|chuyến đi|2|travel
+journey|hành trình|2|travel
+vacation|kỳ nghỉ|2|travel
+tourist|khách du lịch|2|travel
+passport|hộ chiếu|2|travel
+visa|thị thực|2|travel
+luggage|hành lý|2|travel
+suitcase|va li|2|travel
+destination|điểm đến|2|travel
+reservation|đặt chỗ|2|travel
+booking|đặt trước|2|travel
+flight|chuyến bay|2|travel
+departure|khởi hành|2|travel
+arrival|đến nơi|2|travel
+delay|trì hoãn|2|travel
+guide|hướng dẫn viên|2|travel
+tour|chuyến tham quan|2|travel
+sightseeing|tham quan|2|travel
+souvenir|quà lưu niệm|2|travel
+currency|tiền tệ|2|travel
+exchange|đổi tiền|2|travel
+abroad|nước ngoài|2|travel
+embassy|đại sứ quán|2|travel
+culture|văn hóa|2|travel
+custom|phong tục|2|travel
+tradition|truyền thống|2|travel
+landmark|địa danh|2|travel
+scenery|cảnh quan|2|travel
+adventure|cuộc phiêu lưu|2|travel
+explore|khám phá|2|travel
+emotion|cảm xúc|2|emotion
+excited|hào hứng|2|emotion
+nervous|lo lắng|2|emotion
+worried|lo âu|2|emotion
+scared|sợ hãi|2|emotion
+surprised|ngạc nhiên|2|emotion
+confused|bối rối|2|emotion
+proud|tự hào|2|emotion
+embarrassed|xấu hổ|2|emotion
+jealous|ghen tị|2|emotion
+disappointed|thất vọng|2|emotion
+confident|tự tin|2|emotion
+curious|tò mò|2|emotion
+bored|chán|2|emotion
+relaxed|thư giãn|2|emotion
+stressed|căng thẳng|2|emotion
+grateful|biết ơn|2|emotion
+lonely|cô đơn|2|emotion
+hopeful|hy vọng|2|emotion
+calm|bình tĩnh|2|emotion
+personality|tính cách|2|emotion
+honest|trung thực|2|emotion
+friendly|thân thiện|2|emotion
+polite|lịch sự|2|emotion
+rude|thô lỗ|2|emotion
+generous|hào phóng|2|emotion
+selfish|ích kỷ|2|emotion
+shy|nhút nhát|2|emotion
+outgoing|hướng ngoại|2|emotion
+creative|sáng tạo|2|emotion
+serious|nghiêm túc|2|emotion
+cheerful|vui vẻ|2|emotion
+stubborn|bướng bỉnh|2|emotion
+loyal|trung thành|2|emotion
+mood|tâm trạng|2|emotion
+attitude|thái độ|2|emotion
+behavior|hành vi|2|emotion
+shopping|mua sắm|2|shopping
+price|giá cả|2|shopping
+discount|giảm giá|2|shopping
+sale|khuyến mãi|2|shopping
+receipt|hóa đơn|2|shopping
+cash|tiền mặt|2|shopping
+credit card|thẻ tín dụng|2|shopping
+coin|đồng xu|2|shopping
+bill|hóa đơn thanh toán|2|shopping
+budget|ngân sách|2|shopping
+save money|tiết kiệm tiền|2|shopping
+spend|chi tiêu|2|shopping
+borrow|vay mượn|2|shopping
+lend|cho vay|2|shopping
+debt|nợ|2|shopping
+loan|khoản vay|2|shopping
+invest|đầu tư|2|shopping
+profit|lợi nhuận|2|shopping
+loss|thua lỗ|2|shopping
+tax|thuế|2|shopping
+refund|hoàn tiền|2|shopping
+exchange (shopping)|đổi trả|2|shopping
+brand|thương hiệu|2|shopping
+quality|chất lượng|2|shopping
+mall|trung tâm thương mại|2|shopping
+supermarket|siêu thị|2|shopping
+cashier|thu ngân|2|shopping
+customer service|dịch vụ khách hàng|2|shopping
+football|bóng đá|2|sport
+basketball|bóng rổ|2|sport
+tennis|quần vợt|2|sport
+volleyball|bóng chuyền|2|sport
+badminton|cầu lông|2|sport
+swimming|bơi lội|2|sport
+running|chạy bộ|2|sport
+cycling|đạp xe|2|sport
+boxing|quyền anh|2|sport
+golf|gôn|2|sport
+team|đội|2|sport
+player|cầu thủ|2|sport
+coach|huấn luyện viên|2|sport
+match|trận đấu|2|sport
+competition|cuộc thi|2|sport
+championship|giải vô địch|2|sport
+win|chiến thắng|2|sport
+score|tỷ số|2|sport
+referee|trọng tài|2|sport
+stadium|sân vận động|2|sport
+gym|phòng tập gym|2|sport
+fitness|thể lực|2|sport
+champion|nhà vô địch|2|sport
+medal|huy chương|2|sport
+practice|luyện tập|2|sport
+hobby|sở thích|2|hobby
+movie|phim|2|hobby
+film|bộ phim|2|hobby
+actor|diễn viên nam|2|hobby
+actress|diễn viên nữ|2|hobby
+concert|buổi hòa nhạc|2|hobby
+song|bài hát|2|hobby
+singer|ca sĩ|2|hobby
+dance|nhảy múa|2|hobby
+paint|vẽ tranh|2|hobby
+photography|nhiếp ảnh|2|hobby
+camera|máy ảnh|2|hobby
+collect|sưu tầm|2|hobby
+game|trò chơi|2|hobby
+puzzle|câu đố|2|hobby
+chess|cờ vua|2|hobby
+card game|trò chơi bài|2|hobby
+festival|lễ hội|2|hobby
+party|bữa tiệc|2|hobby
+celebration|lễ kỷ niệm|2|hobby
+entertainment|giải trí|2|hobby
+relax|thư giãn|2|hobby
+enjoy|tận hưởng|2|hobby
+interest|sự quan tâm|2|hobby
+talent|tài năng|2|hobby
+environment|môi trường|2|environment
+pollution|ô nhiễm|2|environment
+recycle|tái chế|2|environment
+waste|rác thải|2|environment
+plastic|nhựa|2|environment
+climate|khí hậu|2|environment
+temperature|nhiệt độ|2|environment
+resource|tài nguyên|2|environment
+energy|năng lượng|2|environment
+solar|năng lượng mặt trời|2|environment
+wildlife|động vật hoang dã|2|environment
+species|loài|2|environment
+extinct|tuyệt chủng|2|environment
+protect|bảo vệ|2|environment
+conserve|bảo tồn|2|environment
+natural|tự nhiên|2|environment
+plant-verb|trồng cây|2|environment
+drought|hạn hán|2|environment
+flood|lũ lụt|2|environment
+disaster|thiên tai|2|environment
+earthquake|động đất|2|environment
+volcano|núi lửa|2|environment
+gas|khí gas|2|environment
+fuel|nhiên liệu|2|environment
+electricity|điện|2|environment
+sustainable|bền vững|2|environment
+look after|chăm sóc|2|phrasal
+look for|tìm kiếm|2|phrasal
+give up|từ bỏ|2|phrasal
+find out|tìm ra|2|phrasal
+turn on|bật lên|2|phrasal
+turn off|tắt đi|2|phrasal
+pick up|nhặt lên|2|phrasal
+put on|mặc vào|2|phrasal
+take off|cởi ra|2|phrasal
+get up|thức dậy|2|phrasal
+sit down|ngồi xuống|2|phrasal
+stand up|đứng lên|2|phrasal
+come back|quay lại|2|phrasal
+go on|tiếp tục|2|phrasal
+carry on|tiếp tục làm|2|phrasal
+break down|hỏng hóc|2|phrasal
+break up|chia tay|2|phrasal
+grow up|lớn lên|2|phrasal
+run out|hết sạch|2|phrasal
+figure out|tìm hiểu ra|2|phrasal
+fill in|điền vào|2|phrasal
+hand in|nộp bài|2|phrasal
+hang out|đi chơi cùng|2|phrasal
+call off|hủy bỏ|2|phrasal
+check in|làm thủ tục nhận phòng|2|phrasal
+check out|trả phòng|2|phrasal
+set up|thiết lập|2|phrasal
+show up|xuất hiện|2|phrasal
+work out|tập luyện|2|phrasal
+bring up|nuôi dạy|2|phrasal
+take care of|chăm sóc cho|2|phrasal
+look forward to|mong chờ|2|phrasal
+put off|hoãn lại|2|phrasal
+get along|hòa hợp|2|phrasal
+come up with|nghĩ ra|2|phrasal
+deal with|xử lý|2|phrasal
+comfortable|thoải mái|2|adj2
+convenient|tiện lợi|2|adj2
+efficient|hiệu quả|2|adj2
+effective|có hiệu lực|2|adj2
+successful|thành công|2|adj2
+popular|phổ biến|2|adj2
+common|thông thường|2|adj2
+rare|hiếm|2|adj2
+normal|bình thường|2|adj2
+unusual|khác thường|2|adj2
+modern|hiện đại|2|adj2
+traditional|truyền thống|2|adj2
+ancient|cổ xưa|2|adj2
+crowded|đông đúc|2|adj2
+peaceful|yên bình|2|adj2
+noisy|ồn ào|2|adj2
+polluted|ô nhiễm|2|adj2
+fresh|tươi mới|2|adj2
+rotten|thối|2|adj2
+stale|ôi thiu|2|adj2
+crispy|giòn|2|adj2
+tough|dai|2|adj2
+tender|mềm mại|2|adj2
+flexible|linh hoạt|2|adj2
+strict|nghiêm khắc|2|adj2
+fair|công bằng|2|adj2
+unfair|không công bằng|2|adj2
+reasonable|hợp lý|2|adj2
+suitable|phù hợp|2|adj2
+appropriate|thích hợp|2|adj2
+available|có sẵn|2|adj2
+crucial|thiết yếu|2|adj2
+urgent|khẩn cấp|2|adj2
+obvious|rõ ràng|2|adj2
+complicated|phức tạp|2|adj2
+mysterious|bí ẩn|2|adj2
+attractive|hấp dẫn|2|adj2
+impressive|ấn tượng|2|adj2
+boring|nhàm chán|2|adj2
+exciting|thú vị|2|adj2
+amazing|tuyệt vời|2|adj2
+terrible|khủng khiếp|2|adj2
+awful|kinh khủng|2|adj2
+wonderful|tuyệt diệu|2|adj2
+awkward|lúng túng|2|adj2
+relationship|mối quan hệ|2|social
+communication|giao tiếp|2|social
+conversation|cuộc trò chuyện|2|social
+argument|tranh cãi|2|social
+agreement|sự đồng ý|2|social
+disagreement|sự bất đồng|2|social
+opinion|quan điểm|2|social
+suggestion|đề xuất|2|social
+advice|lời khuyên|2|social
+apologize|xin lỗi|2|social
+forgive|tha thứ|2|social
+trust|tin tưởng|2|social
+support|hỗ trợ|2|social
+encourage|khuyến khích|2|social
+complain|phàn nàn|2|social
+compliment|lời khen|2|social
+criticize|chỉ trích|2|social
+gossip|chuyện phiếm|2|social
+rumor|tin đồn|2|social
+invite|mời|2|social
+accept|chấp nhận|2|social
+refuse|từ chối|2|social
+promise|hứa hẹn|2|social
+greet|chào hỏi|2|social
+introduce oneself|tự giới thiệu|2|social
+community|cộng đồng|2|social
+society|xã hội|2|social
+generation|thế hệ|2|social
+news|tin tức|2|media
+newspaper|báo giấy|2|media
+magazine|tạp chí|2|media
+article|bài báo|2|media
+headline|tiêu đề|2|media
+journalist|nhà báo|2|media
+reporter|phóng viên|2|media
+interview-media|cuộc phỏng vấn|2|media
+broadcast|phát sóng|2|media
+channel|kênh|2|media
+advertisement|quảng cáo|2|media
+publish|xuất bản|2|media
+publisher|nhà xuất bản|2|media
+audience|khán giả|2|media
+review|đánh giá|2|media
+comment|bình luận|2|media
+subscribe|đăng ký|2|media
+episode|tập phim|2|media
+series|loạt phim|2|media
+content|nội dung|2|media
+influencer|người có ảnh hưởng|2|media
+university|trường đại học|2|work
+college|trường cao đẳng|2|work
+degree|bằng cấp|2|work
+scholarship|học bổng|2|work
+graduate|tốt nghiệp|2|work
+major|chuyên ngành|2|work
+lecture|bài giảng|2|work
+professor|giáo sư|2|work
+research|nghiên cứu|2|work
+knowledge|kiến thức|2|work
+information|thông tin|2|work
+education|giáo dục|2|work
+training|đào tạo|2|work
+certificate|chứng chỉ|2|work
+qualification|bằng cấp chuyên môn|2|work
+routine|thói quen hàng ngày|2|social
+habit|thói quen|2|social
+lifestyle|lối sống|2|social
+schedule-daily|lịch trình hàng ngày|2|social
+appointment|cuộc hẹn|2|social
+alarm|báo thức|2|social
+shower|tắm vòi sen|2|social
+brush teeth|đánh răng|2|social
+commute|đi làm hàng ngày|2|social
+errand|việc vặt|2|social
+chore|việc nhà|2|social
+laundry|giặt đồ|2|social
+recipe|công thức nấu ăn|2|hobby
+ingredient|nguyên liệu|2|hobby
+boil|luộc|2|hobby
+fry|chiên|2|hobby
+grill|nướng|2|hobby
+bake|nướng bánh|2|hobby
+roast|quay|2|hobby
+steam|hấp|2|hobby
+mix|trộn|2|hobby
+slice|thái lát|2|hobby
+chop|băm|2|hobby
+stir|khuấy|2|hobby
+flavor|hương vị|2|hobby
+portion|khẩu phần|2|hobby
+oven|lò nướng|2|health
+refrigerator|tủ lạnh|2|health
+microwave|lò vi sóng|2|health
+washing machine|máy giặt|2|health
+air conditioner|máy điều hòa|2|health
+fan|quạt|2|health
+vacuum cleaner|máy hút bụi|2|health
+appliance|thiết bị gia dụng|2|health
+furniture|đồ nội thất|2|health
+humid|ẩm ướt|2|environment
+foggy|nhiều sương mù|2|environment
+breeze|gió nhẹ|2|environment
+forecast|dự báo|2|environment
+freeze|đóng băng|2|environment
+melt|tan chảy|2|environment
+season|mùa|2|environment
+humidity|độ ẩm|2|environment
+harvest|thu hoạch|2|environment
+crop|mùa màng|2|environment
+soil|đất trồng|2|environment
+seed|hạt giống|2|environment
+increase|tăng lên|2|adj2
+decrease|giảm xuống|2|adj2
+improve|cải thiện|2|adj2
+develop|phát triển|2|adj2
+progress|tiến bộ|2|adj2
+result|kết quả|2|adj2
+cause|nguyên nhân|2|adj2
+effect|ảnh hưởng|2|adj2
+solution|giải pháp|2|adj2
+problem|vấn đề|2|adj2
+challenge|thử thách|2|adj2
+opportunity|cơ hội|2|adj2
+advantage|lợi thế|2|adj2
+disadvantage|bất lợi|2|adj2
+benefit|lợi ích|2|adj2
+risk|rủi ro|2|adj2
+decision|quyết định|2|adj2
+choice|sự lựa chọn|2|adj2
+option|lựa chọn|2|adj2
+compare|so sánh|2|adj2
+consider|xem xét|2|adj2
+suggest|đề nghị|2|adj2
+recommend|khuyên dùng|2|adj2
+require|yêu cầu|2|adj2
+provide|cung cấp|2|adj2
+include|bao gồm|2|adj2
+exclude|loại trừ|2|adj2
+depend|phụ thuộc|2|adj2
+rely|dựa vào|2|adj2
+prefer|thích hơn|2|adj2
+economy|nền kinh tế|3|business
+economic|thuộc về kinh tế|3|business
+finance|tài chính|3|business
+investment|sự đầu tư|3|business
+investor|nhà đầu tư|3|business
+shareholder|cổ đông|3|business
+stock|cổ phiếu|3|business
+market-econ|thị trường|3|business
+inflation|lạm phát|3|business
+recession|suy thoái|3|business
+revenue|doanh thu|3|business
+expense|chi phí|3|business
+budget-corp|ngân sách doanh nghiệp|3|business
+merger|sáp nhập|3|business
+acquisition|mua lại|3|business
+entrepreneur|doanh nhân khởi nghiệp|3|business
+startup|công ty khởi nghiệp|3|business
+strategy|chiến lược|3|business
+competitive|cạnh tranh|3|business
+monopoly|độc quyền|3|business
+supply|nguồn cung|3|business
+demand|nhu cầu|3|business
+trade|thương mại|3|business
+export|xuất khẩu|3|business
+import|nhập khẩu|3|business
+tariff|thuế quan|3|business
+negotiate|đàm phán|3|business
+negotiation|cuộc đàm phán|3|business
+stakeholder|các bên liên quan|3|business
+asset|tài sản|3|business
+liability|nghĩa vụ nợ|3|business
+capital|vốn|3|business
+funding|nguồn vốn tài trợ|3|business
+venture|dự án mạo hiểm|3|business
+consumer|người tiêu dùng|3|business
+corporation|tập đoàn|3|business
+subsidiary|công ty con|3|business
+outsource|thuê ngoài|3|business
+supply chain|chuỗi cung ứng|3|business
+logistics|hậu cần|3|business
+regulation|quy định|3|business
+compliance|sự tuân thủ|3|business
+audit|kiểm toán|3|business
+forecast-biz|dự báo kinh doanh|3|business
+sustainability|tính bền vững|3|business
+diversify|đa dạng hóa|3|business
+efficiency|hiệu suất|3|business
+productivity-biz|năng suất lao động|3|business
+government|chính phủ|3|politics
+policy|chính sách|3|politics
+election|cuộc bầu cử|3|politics
+vote|bỏ phiếu|3|politics
+candidate|ứng cử viên|3|politics
+democracy|dân chủ|3|politics
+citizen|công dân|3|politics
+constitution|hiến pháp|3|politics
+parliament|nghị viện|3|politics
+minister|bộ trưởng|3|politics
+president|tổng thống|3|politics
+diplomat|nhà ngoại giao|3|politics
+embassy-pol|đại sứ quán|3|politics
+treaty|hiệp ước|3|politics
+sanction|lệnh trừng phạt|3|politics
+reform|cải cách|3|politics
+protest|biểu tình|3|politics
+demonstration|cuộc biểu tình|3|politics
+authority|quyền lực|3|politics
+administration|chính quyền|3|politics
+legislation|luật pháp ban hành|3|politics
+public opinion|dư luận|3|politics
+inequality|bất bình đẳng|3|politics
+poverty|nghèo đói|3|politics
+welfare|phúc lợi|3|politics
+immigration|nhập cư|3|politics
+refugee|người tị nạn|3|politics
+population|dân số|3|politics
+census|điều tra dân số|3|politics
+civil rights|quyền công dân|3|politics
+justice|công lý|3|politics
+experiment|thí nghiệm|3|science
+hypothesis|giả thuyết|3|science
+theory|lý thuyết|3|science
+evidence|bằng chứng|3|science
+data analysis|phân tích dữ liệu|3|science
+observation|sự quan sát|3|science
+laboratory|phòng thí nghiệm|3|science
+researcher|nhà nghiên cứu|3|science
+discovery|khám phá|3|science
+invention|phát minh|3|science
+innovation|sự đổi mới|3|science
+technology|công nghệ|3|science
+molecule|phân tử|3|science
+atom|nguyên tử|3|science
+cell|tế bào|3|science
+gene|gen|3|science
+genetics|di truyền học|3|science
+evolution|sự tiến hóa|3|science
+organism|sinh vật|3|science
+ecosystem|hệ sinh thái|3|science
+biology|sinh học|3|science
+chemistry|hóa học|3|science
+physics|vật lý học|3|science
+astronomy|thiên văn học|3|science
+universe|vũ trụ|3|science
+galaxy|thiên hà|3|science
+planet|hành tinh|3|science
+gravity|trọng lực|3|science
+particle|hạt|3|science
+formula|công thức|3|science
+calculation|phép tính|3|science
+statistics|thống kê|3|science
+variable|biến số|3|science
+analysis|sự phân tích|3|science
+method|phương pháp|3|science
+methodology|phương pháp luận|3|science
+law|luật|3|law
+lawyer|luật sư|3|law
+court|tòa án|3|law
+judge|thẩm phán|3|law
+jury|bồi thẩm đoàn|3|law
+trial|phiên tòa|3|law
+crime|tội phạm|3|law
+criminal|tội phạm (người)|3|law
+suspect|nghi phạm|3|law
+witness|nhân chứng|3|law
+verdict|phán quyết|3|law
+prison|nhà tù|3|law
+punishment|hình phạt|3|law
+lawsuit|vụ kiện|3|law
+sue|kiện|3|law
+legal|hợp pháp|3|law
+illegal|bất hợp pháp|3|law
+obligation|nghĩa vụ|3|law
+violation|sự vi phạm|3|law
+enforce|thực thi|3|law
+prohibit|cấm|3|law
+permit|cho phép|3|law
+license|giấy phép|3|law
+copyright|bản quyền|3|law
+intellectual property|sở hữu trí tuệ|3|law
+argue|lập luận|3|academic
+claim|khẳng định|3|academic
+assert|khẳng định chắc chắn|3|academic
+assume|giả định|3|academic
+assumption|giả định (danh từ)|3|academic
+conclude|kết luận|3|academic
+conclusion|kết luận (danh từ)|3|academic
+summarize|tóm tắt|3|academic
+summary|bản tóm tắt|3|academic
+define|định nghĩa|3|academic
+definition|định nghĩa (danh từ)|3|academic
+illustrate|minh họa|3|academic
+demonstrate|chứng minh|3|academic
+emphasize|nhấn mạnh|3|academic
+significant|có ý nghĩa quan trọng|3|academic
+relevant|có liên quan|3|academic
+irrelevant|không liên quan|3|academic
+context|bối cảnh|3|academic
+perspective|góc nhìn|3|academic
+viewpoint|quan điểm cá nhân|3|academic
+criteria|tiêu chí|3|academic
+framework|khung lý thuyết|3|academic
+concept|khái niệm|3|academic
+principle|nguyên tắc|3|academic
+approach|cách tiếp cận|3|academic
+factor|yếu tố|3|academic
+aspect|khía cạnh|3|academic
+element|yếu tố cấu thành|3|academic
+component|thành phần|3|academic
+structure|cấu trúc|3|academic
+function|chức năng|3|academic
+process|quá trình|3|academic
+phase|giai đoạn|3|academic
+stage|giai đoạn phát triển|3|academic
+outcome|kết quả cuối cùng|3|academic
+implication|hàm ý|3|academic
+interpret|diễn giải|3|academic
+interpretation|sự diễn giải|3|academic
+justify|biện minh|3|academic
+validate|xác nhận tính đúng đắn|3|academic
+credible|đáng tin cậy|3|academic
+reliable|đáng tin cậy (dữ liệu)|3|academic
+consistent|nhất quán|3|academic
+inconsistent|không nhất quán|3|academic
+comprehensive|toàn diện|3|academic
+thorough|kỹ lưỡng|3|academic
+citation|trích dẫn|3|academic
+reference|tài liệu tham khảo|3|academic
+plagiarism|đạo văn|3|academic
+thesis|luận văn|3|academic
+dissertation|luận án|3|academic
+abstract|tóm lược nghiên cứu|3|academic
+ambiguous|mơ hồ|3|abstract
+arbitrary|tùy tiện|3|abstract
+inevitable|không thể tránh khỏi|3|abstract
+subtle|tinh tế|3|abstract
+profound|sâu sắc|3|abstract
+ironic|mỉa mai|3|abstract
+paradox|nghịch lý|3|abstract
+contradiction|sự mâu thuẫn|3|abstract
+controversy|tranh cãi|3|abstract
+controversial|gây tranh cãi|3|abstract
+bias|thành kiến|3|abstract
+prejudice|định kiến|3|abstract
+stereotype|khuôn mẫu định kiến|3|abstract
+tolerance|sự khoan dung|3|abstract
+diversity|sự đa dạng|3|abstract
+integrity|sự chính trực|3|abstract
+ethic|đạo đức|3|abstract
+ethical|có đạo đức|3|abstract
+moral|thuộc về đạo đức|3|abstract
+value|giá trị|3|abstract
+belief|niềm tin|3|abstract
+faith|đức tin|3|abstract
+identity|bản sắc|3|abstract
+autonomy|quyền tự chủ|3|abstract
+freedom|tự do|3|abstract
+liberty|tự do (quyền)|3|abstract
+oppression|sự áp bức|3|abstract
+empower|trao quyền|3|abstract
+dignity|nhân phẩm|3|abstract
+compassion|lòng trắc ẩn|3|abstract
+empathy|sự đồng cảm|3|abstract
+resilience|khả năng phục hồi|3|abstract
+persistence|sự kiên trì|3|abstract
+determination|sự quyết tâm|3|abstract
+ambition|tham vọng|3|abstract
+humility|sự khiêm tốn|3|abstract
+arrogance|sự kiêu ngạo|3|abstract
+skepticism|sự hoài nghi|3|abstract
+optimism|sự lạc quan|3|abstract
+pessimism|sự bi quan|3|abstract
+carbon emission|khí thải carbon|3|environment
+greenhouse gas|khí nhà kính|3|environment
+global warming|nóng lên toàn cầu|3|environment
+climate change|biến đổi khí hậu|3|environment
+renewable energy|năng lượng tái tạo|3|environment
+fossil fuel|nhiên liệu hóa thạch|3|environment
+deforestation|nạn phá rừng|3|environment
+biodiversity|đa dạng sinh học|3|environment
+sea level|mực nước biển|3|environment
+carbon footprint|dấu chân carbon|3|environment
+sustainability-climate|tính bền vững môi trường|3|environment
+conservation|công tác bảo tồn|3|environment
+literature|văn học|3|art
+novel|tiểu thuyết|3|art
+poet|nhà thơ|3|art
+poem|bài thơ|3|art
+metaphor|phép ẩn dụ|3|art
+narrative|câu chuyện tường thuật|3|art
+character|nhân vật văn học|3|art
+plot|cốt truyện|3|art
+theme|chủ đề tác phẩm|3|art
+genre|thể loại|3|art
+masterpiece|kiệt tác|3|art
+sculpture|tác phẩm điêu khắc|3|art
+exhibition|triển lãm|3|art
+gallery|phòng trưng bày|3|art
+aesthetic|tính thẩm mỹ|3|art
+critique|phê bình nghệ thuật|3|art
+symbolism|chủ nghĩa tượng trưng|3|art
+cognition|nhận thức|3|psychology
+perception|sự tri giác|3|psychology
+awareness|nhận thức về|3|psychology
+subconscious|tiềm thức|3|psychology
+motivation|động lực|3|psychology
+instinct|bản năng|3|psychology
+personality trait|đặc điểm tính cách|3|psychology
+introvert|người hướng nội|3|psychology
+extrovert|người hướng ngoại|3|psychology
+anxiety|sự lo âu|3|psychology
+depression|trầm cảm|3|psychology
+trauma|sang chấn tâm lý|3|psychology
+therapy|liệu pháp tâm lý|3|psychology
+mindset|tư duy|3|psychology
+self-esteem|lòng tự trọng|3|psychology
+emotional intelligence|trí tuệ cảm xúc|3|psychology
+memory|trí nhớ|3|psychology
+concentration|sự tập trung|3|psychology
+reasoning|lý luận|3|psychology
+intuition|trực giác|3|psychology
+artificial intelligence|trí tuệ nhân tạo|3|tech
+algorithm|thuật toán|3|tech
+automation|tự động hóa|3|tech
+robot|người máy|3|tech
+machine learning|học máy|3|tech
+neural network|mạng nơ-ron|3|tech
+digital transformation|chuyển đổi số|3|tech
+cybersecurity|an ninh mạng|3|tech
+encryption|mã hóa|3|tech
+virtual reality|thực tế ảo|3|tech
+augmented reality|thực tế tăng cường|3|tech
+interface|giao diện|3|tech
+platform|nền tảng|3|tech
+infrastructure|cơ sở hạ tầng|3|tech
+analyze|phân tích|3|verb3
+evaluate|đánh giá|3|verb3
+assess|thẩm định|3|verb3
+investigate|điều tra|3|verb3
+examine|xem xét kỹ|3|verb3
+identify|xác định|3|verb3
+determine|xác định rõ|3|verb3
+establish|thiết lập|3|verb3
+implement|thực hiện|3|verb3
+facilitate|tạo điều kiện thuận lợi|3|verb3
+enhance|nâng cao|3|verb3
+optimize|tối ưu hóa|3|verb3
+generate|tạo ra|3|verb3
+derive|bắt nguồn từ|3|verb3
+integrate|tích hợp|3|verb3
+diminish|giảm bớt|3|verb3
+undermine|làm suy yếu|3|verb3
+reinforce|củng cố|3|verb3
+mitigate|giảm thiểu|3|verb3
+allocate|phân bổ|3|verb3
+anticipate|dự đoán trước|3|verb3
+comprehend|thấu hiểu|3|verb3
+distinguish|phân biệt|3|verb3
+formulate|xây dựng (ý tưởng)|3|verb3
+break the ice|phá vỡ sự ngượng ngùng ban đầu|3|idiom
+piece of cake|việc dễ như ăn kẹo|3|idiom
+under the weather|cảm thấy không khỏe|3|idiom
+hit the books|chăm chỉ học hành|3|idiom
+once in a blue moon|hiếm khi xảy ra|3|idiom
+cost an arm and a leg|đắt đỏ|3|idiom
+let the cat out of the bag|để lộ bí mật|3|idiom
+on the same page|có cùng quan điểm|3|idiom
+in the long run|về lâu dài|3|idiom
+call it a day|kết thúc công việc|3|idiom
+kill two birds with one stone|một công đôi việc|3|idiom
+break a leg|chúc may mắn|3|idiom
+speak of the devil|nhắc đến ai thì người đó xuất hiện|3|idiom
+beat around the bush|nói vòng vo|3|idiom
+hit the nail on the head|nói trúng vấn đề|3|idiom
+get out of hand|vượt tầm kiểm soát|3|idiom
+a blessing in disguise|trong cái rủi có cái may|3|idiom
+back to square one|quay lại điểm xuất phát|3|idiom
+bite the bullet|chấp nhận khó khăn|3|idiom
+by the book|theo đúng quy tắc|3|idiom
+cutting corners|làm tắt cho nhanh|3|idiom
+give someone the benefit of the doubt|tin tưởng dù chưa chắc chắn|3|idiom
+in a nutshell|nói tóm lại|3|idiom
+miss the boat|bỏ lỡ cơ hội|3|idiom
+on thin ice|trong tình huống rủi ro|3|idiom
+pull yourself together|trấn tĩnh lại|3|idiom
+see eye to eye|đồng quan điểm|3|idiom
+the ball is in your court|quyền quyết định thuộc về bạn|3|idiom
+think outside the box|suy nghĩ sáng tạo|3|idiom
+time flies|thời gian trôi nhanh|3|idiom
+diagnosis|chẩn đoán|3|science
+prescription|đơn thuốc|3|science
+immune system|hệ miễn dịch|3|science
+metabolism|quá trình trao đổi chất|3|science
+nutrient|chất dinh dưỡng|3|science
+protein|chất đạm|3|science
+carbohydrate|chất bột đường|3|science
+hormone|hoóc-môn|3|science
+bacteria|vi khuẩn|3|science
+virus|vi-rút|3|science
+epidemic|dịch bệnh|3|science
+pandemic|đại dịch|3|science
+social inequality|sự bất bình đẳng xã hội|3|politics
+globalization|toàn cầu hóa|3|politics
+urbanization|đô thị hóa|3|politics
+bureaucracy|bộ máy quan liêu|3|politics
+transparency|tính minh bạch|3|politics
+accountability|trách nhiệm giải trình|3|politics
+corruption|tham nhũng|3|politics
+diplomacy|ngoại giao|3|politics
+sovereignty|chủ quyền|3|politics
+turnover|tỷ lệ luân chuyển nhân sự|3|business
+overhead|chi phí quản lý chung|3|business
+liquidity|tính thanh khoản|3|business
+dividend|cổ tức|3|business
+portfolio|danh mục đầu tư|3|business
+equity|vốn chủ sở hữu|3|business
+bankruptcy|phá sản|3|business
+franchise|nhượng quyền thương mại|3|business
+brand loyalty|lòng trung thành với thương hiệu|3|business
+market share|thị phần|3|business
+niche|thị trường ngách|3|business
+scalable|có thể mở rộng quy mô|3|business
+pitch|thuyết trình kêu gọi đầu tư|3|business
+prototype|nguyên mẫu|3|business
+disruptive|mang tính đột phá|3|business
+procurement|thu mua|3|business
+inventory|hàng tồn kho|3|business
+wholesale|bán buôn|3|business
+retail|bán lẻ|3|business
+commodity|hàng hóa|3|business
+fiscal year|năm tài chính|3|business
+overtime pay|lương làm thêm giờ|3|business
+severance|trợ cấp thôi việc|3|business
+freelancer|người làm việc tự do|3|business
+remote work|làm việc từ xa|3|business
+onboarding|đào tạo hội nhập|3|business
+delegate|ủy quyền|3|business
+subordinate|cấp dưới|3|business
+executive|giám đốc điều hành|3|business
+shareholder value|giá trị cổ đông|3|business
+consensus|sự đồng thuận|3|politics
+referendum|cuộc trưng cầu dân ý|3|politics
+coalition|liên minh|3|politics
+lobby|vận động hành lang|3|politics
+autonomy-pol|quyền tự trị|3|politics
+regime|chế độ chính trị|3|politics
+statesman|chính khách|3|politics
+bureaucrat|quan chức|3|politics
+electorate|cử tri|3|politics
+constituency|khu vực bầu cử|3|politics
+mandate|nhiệm vụ được ủy quyền|3|politics
+veto|quyền phủ quyết|3|politics
+amendment|tu chính án|3|politics
+ratify|phê chuẩn|3|politics
+jurisdiction|thẩm quyền pháp lý|3|politics
+federal|thuộc liên bang|3|politics
+municipal|thuộc thành phố|3|politics
+grassroots|cấp cơ sở|3|politics
+activism|chủ nghĩa hành động xã hội|3|politics
+advocacy|sự vận động ủng hộ|3|politics
+correlation|mối tương quan|3|science
+causation|quan hệ nhân quả|3|science
+sample size|kích thước mẫu|3|science
+control group|nhóm đối chứng|3|science
+peer review|bình duyệt|3|science
+empirical|dựa trên thực nghiệm|3|science
+qualitative|định tính|3|science
+quantitative|định lượng|3|science
+simulation|mô phỏng|3|science
+prototype-sci|mẫu thử nghiệm|3|science
+breakthrough|bước đột phá|3|science
+synthesis|sự tổng hợp|3|science
+catalyst|chất xúc tác|3|science
+equilibrium|trạng thái cân bằng|3|science
+velocity|vận tốc|3|science
+momentum|động lượng|3|science
+radiation|bức xạ|3|science
+frequency|tần số|3|science
+wavelength|bước sóng|3|science
+telescope|kính thiên văn|3|science
+microscope|kính hiển vi|3|science
+specimen|mẫu vật|3|science
+habitat|môi trường sống|3|science
+predator|động vật ăn thịt|3|science
+prey|con mồi|3|science
+adaptation|sự thích nghi|3|science
+mutation|đột biến|3|science
+testimony|lời khai|3|law
+plaintiff|nguyên đơn|3|law
+defendant|bị đơn|3|law
+prosecutor|công tố viên|3|law
+appeal|kháng cáo|3|law
+custody|quyền nuôi con|3|law
+warrant|lệnh (bắt giữ, khám xét)|3|law
+bail|tiền bảo lãnh|3|law
+felony|trọng tội|3|law
+misdemeanor|tội nhẹ|3|law
+testify|làm chứng|3|law
+litigation|kiện tụng|3|law
+arbitration|trọng tài phân xử|3|law
+mediation|hòa giải|3|law
+clause|điều khoản|3|law
+statute|đạo luật thành văn|3|law
+precedent|tiền lệ|3|law
+liable|có trách nhiệm pháp lý|3|law
+negligence|sự bất cẩn|3|law
+breach|vi phạm hợp đồng|3|law
+indictment|bản cáo trạng|3|law
+acquit|tuyên trắng án|3|law
+convict|kết tội|3|law
+window-shop|xem hàng không mua|1|house
+shirt-button|cúc áo|1|clothes
+umbrella (mưa)|dù che mưa|1|nature
+sunny|nắng|1|nature
+cloudy|nhiều mây|1|nature
+rainy|có mưa|1|nature
+snowy|có tuyết|1|nature
+misty|sương mù|1|nature
+ice|đá|1|nature
+smoke|khói|1|nature
+air|không khí|1|nature
+soil-basic|đất|1|nature
+hill|đồi|1|nature
+valley|thung lũng|1|nature
+desert|sa mạc|1|nature
+jungle|rừng rậm|1|nature
+wave|con sóng|1|nature
+shore|bờ biển|1|nature
+pond|ao|1|nature
+morning meal|bữa sáng nhẹ|1|food
+dinner plate|cái đĩa ăn|1|food
+napkin|khăn ăn|1|food
+menu|thực đơn|1|food
+waiter|bồi bàn|1|food
+order|gọi món|1|food
+recipe (đơn giản)|công thức đơn giản|1|food
+bottle|chai|1|food
+jar|lọ|1|food
+basket|giỏ|1|food
+freezer|tủ đông|1|food
+grocery|hàng tạp hóa|1|house
+corner shop|siêu thị nhỏ|1|house
+housemate|hàng xóm nhà|1|house
+address|địa chỉ|1|house
+postcard|bưu thiếp|1|house
+letter-mail|lá thư|1|house
+stamp|tem thư|1|house
+package|bưu kiện|1|house
+mailbox|hộp thư|1|house
+apartment|căn hộ|1|house
+building|tòa nhà|1|house
+elevator|thang máy|1|house
+balcony|ban công|1|house
+ceiling|trần nhà|1|house
+curtain|rèm cửa|1|house
+pillow|gối|1|house
+blanket|chăn|1|house
+sheet|khăn trải giường|1|house
+candle|nến|1|house
+vase|bình hoa|1|house
+carpet|thảm|1|house
+trash|rác|1|house
+bin|thùng rác|1|house
+kettle|ấm đun nước|1|house
+toaster|máy nướng bánh mì|1|house
+fridge|tủ lạnh nhỏ|1|house
+stove|bếp lò|1|house
+sink|bồn rửa|1|house
+faucet|vòi nước|1|house
+bathtub|bồn tắm|1|house
+toothbrush|bàn chải đánh răng|1|house
+shampoo|dầu gội|1|house
+comb|lược|1|house
+scissors|kéo|1|house
+needle|kim khâu|1|house
+thread|chỉ khâu|1|house
+hammer|cái búa|1|house
+nail-tool|cây đinh|1|house
+tool|dụng cụ|1|house
+ladder|cái thang|1|house
+rope|dây thừng|1|house
+small battery|cục pin|1|house
+flashlight|đèn pin|1|house
+switch|công tắc|1|house
+plug|phích cắm|1|house
+socket|ổ cắm điện|1|house
+wake up|thức dậy|1|verb1
+get dressed|mặc quần áo|1|verb1
+brush hair|chải tóc|1|verb1
+take a shower|tắm vòi sen|1|verb1
+go to bed|đi ngủ|1|verb1
+feel|cảm thấy|1|verb1
+laugh|cười|1|verb1
+cry|khóc|1|verb1
+shout|hét lên|1|verb1
+whisper|thì thầm|1|verb1
+sing|hát|1|verb1
+paint (sơn)|sơn|1|verb1
+sketch|vẽ tranh|1|verb1
+cut hair|cắt tóc|1|verb1
+shave|cạo râu|1|verb1
+kiss|hôn|1|verb1
+hug|ôm|1|verb1
+shake hands|bắt tay|1|verb1
+wave hand|vẫy tay|1|verb1
+point|chỉ tay|1|verb1
+nod|gật đầu|1|verb1
+shake head|lắc đầu|1|verb1
+raise hand|giơ tay|1|verb1
+kneel|quỳ|1|verb1
+lie down|nằm xuống|1|verb1
+fall|ngã|1|verb1
+hurt|làm đau|1|verb1
+hide|trốn|1|verb1
+seek|tìm kiếm|1|verb1
+share|chia sẻ|1|verb1
+borrow-basic|mượn|1|verb1
+lend-basic|cho mượn|1|verb1
+save|tiết kiệm|1|verb1
+spend-basic|tiêu (tiền)|1|verb1
+count money|đếm tiền|1|verb1
+choose|chọn|1|verb1
+decide|quyết định|1|verb1
+agree|đồng ý|1|verb1
+disagree|không đồng ý|1|verb1
+allow|cho phép|1|verb1
+forbid|cấm đoán|1|verb1
+warn|cảnh báo|1|verb1
+promise (hứa)|hứa|1|verb1
+apologize (to someone)|xin lỗi ai đó|1|verb1
+thank|cảm ơn ai đó|1|verb1
+congratulate|chúc mừng|1|verb1
+invite (mời)|mời ai đó|1|verb1
+guess|đoán|1|verb1
+imagine|tưởng tượng|1|verb1
+dream|mơ|1|verb1
+hope|hy vọng|1|verb1
+worry|lo lắng|1|verb1
+enjoy (thích thú)|thích thú|1|verb1
+prepare|chuẩn bị|1|verb1
+repair|sửa|1|verb1
+paint house|sơn nhà|1|verb1
+plant tree|trồng cây|1|verb1
+water plant|tưới cây|1|verb1
+feed|cho ăn|1|verb1
+insurance|bảo hiểm|2|work
+pension|lương hưu|2|work
+benefits|phúc lợi|2|work
+get promoted|được thăng chức|2|work
+professional qualification|trình độ chuyên môn|2|work
+internship|thực tập|2|work
+intern|thực tập sinh|2|work
+mentor|người cố vấn|2|work
+feedback|phản hồi|2|work
+evaluation|đánh giá công việc|2|work
+supervisor|người giám sát|2|work
+headquarters|trụ sở chính|2|work
+branch|chi nhánh|2|work
+shift|ca làm việc|2|work
+attendance|sự chuyên cần|2|work
+punctual|đúng giờ|2|work
+absent|vắng mặt|2|work
+present (có mặt)|có mặt|2|work
+notice|thông báo nghỉ việc|2|work
+warning|cảnh cáo|2|work
+company policy|chính sách công ty|2|work
+procedure|quy trình|2|work
+guideline|hướng dẫn thực hiện|2|work
+memo|bản ghi nhớ|2|work
+agenda|chương trình họp|2|work
+minutes|biên bản họp|2|work
+presentation|bài thuyết trình|2|work
+proposal|đề xuất dự án|2|work
+approval|sự phê duyệt|2|work
+signature|chữ ký|2|work
+printer|máy in|2|tech
+scanner|máy quét|2|tech
+smartphone|điện thoại thông minh|2|tech
+tablet|máy tính bảng|2|tech
+headphone|tai nghe|2|tech
+speaker-device|loa|2|tech
+microphone|micro|2|tech
+webcam|webcam|2|tech
+router|bộ định tuyến|2|tech
+firewall|tường lửa|2|tech
+malware|phần mềm độc hại|2|tech
+spam|thư rác|2|tech
+cache|bộ nhớ đệm|2|tech
+interface-tech|giao diện người dùng|2|tech
+feature|tính năng|2|tech
+version|phiên bản|2|tech
+bug|lỗi phần mềm|2|tech
+crash|treo máy|2|tech
+restart|khởi động lại|2|tech
+shortcut|phím tắt|2|tech
+folder|thư mục|2|tech
+document-tech|tài liệu điện tử|2|tech
+attachment|tệp đính kèm|2|tech
+link|liên kết|2|tech
+platform-tech|nền tảng công nghệ|2|tech
+gadget|thiết bị công nghệ nhỏ|2|tech
+physical therapy|vật lý trị liệu|2|health
+mental health|sức khỏe tâm thần|2|health
+stress|căng thẳng thần kinh|2|health
+insomnia|mất ngủ|2|health
+nutrition|dinh dưỡng|2|health
+balanced diet|chế độ ăn cân bằng|2|health
+obesity|béo phì|2|health
+posture|tư thế|2|health
+stretch|kéo giãn cơ|2|health
+warm up|khởi động (thể chất)|2|health
+cool down|hạ nhiệt (sau tập)|2|health
+immune|miễn dịch|2|health
+contagious|dễ lây lan|2|health
+quarantine|cách ly|2|health
+outbreak|bùng phát dịch|2|health
+donor|người hiến tặng|2|health
+transplant|cấy ghép|2|health
+x-ray|chụp x-quang|2|health
+scan|chụp cắt lớp|2|health
+therapist|nhà trị liệu|2|health
+counselor|cố vấn tâm lý|2|health
+wellbeing|sự khỏe mạnh toàn diện|2|health
+itinerary|lịch trình du lịch|2|travel
+backpack|ba lô|2|travel
+campsite|khu cắm trại|2|travel
+hiking|đi bộ đường dài|2|travel
+resort|khu nghỉ dưỡng|2|travel
+cruise|du thuyền|2|travel
+excursion|chuyến đi ngắn|2|travel
+layover|thời gian quá cảnh|2|travel
+boarding pass|thẻ lên máy bay|2|travel
+customs|hải quan|2|travel
+immigration-travel|nhập cảnh|2|travel
+itinerary-plan|lịch trình chi tiết|2|travel
+accommodation|chỗ ở|2|travel
+hostel|nhà nghỉ tập thể|2|travel
+brochure|tờ rơi quảng cáo|2|travel
+local|người địa phương|2|travel
+foreigner|người nước ngoài|2|travel
+overseas|ở nước ngoài|2|travel
+domestic|trong nước|2|travel
+scenic|có phong cảnh đẹp|2|travel
+picturesque|đẹp như tranh vẽ|2|travel
+warranty|bảo hành|2|shopping
+installment|trả góp|2|shopping
+subscription|đăng ký thuê bao|2|shopping
+voucher|phiếu giảm giá|2|shopping
+bargain|món hời|2|shopping
+retailer|nhà bán lẻ|2|shopping
+wholesale (retail)|bán sỉ|2|shopping
+delivery|giao hàng|2|shopping
+shipping|vận chuyển|2|shopping
+tracking|theo dõi đơn hàng|2|shopping
+package-shop|gói hàng|2|shopping
+courier|người giao hàng|2|shopping
+loyalty program|chương trình khách hàng thân thiết|2|shopping
+membership|tư cách thành viên|2|shopping
+tournament|giải đấu|2|sport
+league|giải đấu bóng|2|sport
+sports season|mùa giải|2|sport
+supporter|người ủng hộ|2|sport
+opponent|đối thủ|2|sport
+teammate|đồng đội|2|sport
+substitute|cầu thủ dự bị|2|sport
+injury-sport|chấn thương thể thao|2|sport
+warm-up (noun)|khởi động thể thao|2|sport
+stretch (thể thao)|giãn cơ|2|sport
+endurance|sức bền|2|sport
+stamina|thể lực bền bỉ|2|sport
+agility|sự nhanh nhẹn|2|sport
+strength training|tập luyện sức mạnh|2|sport
+cardio|bài tập tim mạch|2|sport
+marathon|chạy marathon|2|sport
+tournament bracket|sơ đồ giải đấu|2|sport
+drawn match|trận hòa|2|sport
+penalty|quả phạt đền|2|sport
+foul|phạm lỗi|2|sport
+score board|bảng tỷ số|2|sport
+audience (performance)|khán giả xem biểu diễn|2|hobby
+live performance|buổi biểu diễn|2|hobby
+instrument|nhạc cụ|2|hobby
+guitar|đàn ghi ta|2|hobby
+piano|đàn piano|2|hobby
+drum|trống|2|hobby
+violin|đàn vi ô lông|2|hobby
+band|ban nhạc|2|hobby
+melody|giai điệu|2|hobby
+rhythm|nhịp điệu|2|hobby
+lyrics|lời bài hát|2|hobby
+album|album nhạc|2|hobby
+audition|buổi thử giọng|2|hobby
+rehearsal|buổi tập dượt|2|hobby
+costume|trang phục biểu diễn|2|hobby
+meticulous|tỉ mỉ|3|abstract
+diligent|siêng năng|3|abstract
+pragmatic|thực dụng|3|abstract
+versatile|đa năng|3|abstract
+innate|bẩm sinh|3|abstract
+sophisticated|tinh vi|3|abstract
+elaborate|phức tạp chi tiết|3|abstract
+tedious|tẻ nhạt|3|abstract
+mundane|tầm thường|3|abstract
+trivial|không quan trọng|3|abstract
+substantial|đáng kể|3|abstract
+negligible|không đáng kể|3|abstract
+plausible|hợp lý có thể tin được|3|abstract
+implausible|khó tin|3|abstract
+compelling|thuyết phục|3|abstract
+persuasive|có sức thuyết phục|3|abstract
+skeptical|hoài nghi|3|abstract
+cynical|hoài nghi tiêu cực|3|abstract
+naive|ngây thơ|3|abstract
+gullible|dễ bị lừa|3|abstract
+prudent|thận trọng|3|abstract
+reckless|liều lĩnh|3|abstract
+audacious|táo bạo|3|abstract
+tenacious|kiên trì bền bỉ|3|abstract
+candid|thẳng thắn|3|abstract
+blunt|nói thẳng|3|abstract
+tactful|khéo léo tế nhị|3|abstract
+discreet|kín đáo|3|abstract
+transparent|minh bạch|3|abstract
+prevalent|phổ biến rộng rãi|3|abstract
+pervasive|lan tràn khắp nơi|3|abstract
+inherent|vốn có|3|abstract
+intrinsic|nội tại|3|abstract
+extrinsic|bên ngoài|3|abstract
+subjective|mang tính chủ quan|3|abstract
+objective|khách quan|3|abstract
+coherent|mạch lạc|3|abstract
+incoherent|không mạch lạc|3|abstract
+redundant|dư thừa|3|abstract
+superfluous|thừa thãi không cần thiết|3|abstract
+imperative|cấp thiết|3|abstract
+contingent|phụ thuộc vào điều kiện|3|abstract
+notorious|khét tiếng|3|abstract
+prestigious|danh giá|3|abstract
+dubious|đáng ngờ|3|abstract
+resolve|giải quyết dứt điểm|3|verb3
+tackle|giải quyết vấn đề khó|3|verb3
+confront|đối mặt|3|verb3
+cope|đối phó|3|verb3
+overcome|vượt qua|3|verb3
+withstand|chịu đựng được|3|verb3
+endure|chịu đựng|3|verb3
+sustain|duy trì|3|verb3
+maintain|duy trì trạng thái|3|verb3
+preserve|bảo tồn giữ gìn|3|verb3
+restore|khôi phục|3|verb3
+revive|hồi sinh|3|verb3
+renovate|tân trang|3|verb3
+transform|biến đổi|3|verb3
+convert|chuyển đổi|3|verb3
+adapt|thích ứng|3|verb3
+adjust|điều chỉnh|3|verb3
+modify|sửa đổi|3|verb3
+alter|thay đổi (một phần)|3|verb3
+revise|sửa lại|3|verb3
+amend|tu chỉnh|3|verb3
+eliminate|loại bỏ|3|verb3
+eradicate|xóa bỏ hoàn toàn|3|verb3
+abolish|bãi bỏ|3|verb3
+suspend|đình chỉ|3|verb3
+withdraw|rút lui|3|verb3
+retreat|rút lui (chiến thuật)|3|verb3
+withhold|giữ lại không cho|3|verb3
+disclose|tiết lộ|3|verb3
+conceal|che giấu|3|verb3
+reveal|tiết lộ ra|3|verb3
+expose|phơi bày|3|verb3
+detect|phát hiện|3|verb3
+perceive|nhận thức được|3|verb3
+acknowledge|thừa nhận|3|verb3
+deny|phủ nhận|3|verb3
+dispute|tranh chấp|3|verb3
+contest|tranh cãi phản đối|3|verb3
+comply|tuân thủ|3|verb3
+violate|vi phạm|3|verb3
+infringe|xâm phạm|3|verb3
+exploit|khai thác lợi dụng|3|verb3
+leverage|tận dụng|3|verb3
+capitalize|tận dụng cơ hội|3|verb3
+prioritize|ưu tiên|3|verb3
+streamline|tinh gọn quy trình|3|verb3
+existential|thuộc về sự tồn tại|3|psychology
+introspection|sự tự vấn nội tâm|3|psychology
+perceptual bias|thiên kiến nhận thức|3|psychology
+cognitive dissonance|sự bất hòa nhận thức|3|psychology
+defense mechanism|cơ chế phòng vệ tâm lý|3|psychology
+self-actualization|sự tự hiện thực hóa|3|psychology
+temperament|khí chất|3|psychology
+disposition|thiên hướng tính cách|3|psychology
+apathy|sự thờ ơ|3|psychology
+melancholy|nỗi u sầu|3|psychology
+euphoria|cảm giác hưng phấn tột độ|3|psychology
+nostalgia|nỗi hoài niệm|3|psychology
+sentiment|tình cảm|3|psychology
+inclination|thiên hướng|3|psychology
+predisposition|khuynh hướng có sẵn|3|psychology
+manuscript|bản thảo|3|art
+protagonist|nhân vật chính|3|art
+antagonist|nhân vật phản diện|3|art
+allegory|truyện ngụ ngôn|3|art
+satire|văn châm biếm|3|art
+tragedy|bi kịch|3|art
+comedy|hài kịch|3|art
+prose|văn xuôi|3|art
+verse|thơ ca|3|art
+rhyme|vần điệu|3|art
+foreshadowing|sự báo trước|3|art
+climax|cao trào|3|art
+anecdote|giai thoại|3|art
+autobiography|tự truyện|3|art
+biography|tiểu sử|3|art
+memoir|hồi ký|3|art
+render|thể hiện diễn tả|3|art
+depict|miêu tả|3|art
+portray|khắc họa|3|art
+convey|truyền tải|3|art
+evoke|gợi lên|3|art
+resonate|gây được tiếng vang|3|art
+articulate|diễn đạt rõ ràng|3|art
+eloquent|hùng biện|3|art
+rhetoric|nghệ thuật hùng biện|3|art
+discourse|diễn ngôn|3|art
+dialect|phương ngữ|3|art
+linguistics|ngôn ngữ học|3|art
+vocabulary-adv|vốn từ vựng|3|art
+fluency|sự lưu loát|3|art
+proficiency|trình độ thành thạo|3|art
+comprehension|khả năng lĩnh hội|3|art`;
+
+const CAT_META = {"greet": ["Chào hỏi & Giao tiếp", "👋"], "family": ["Gia đình & Con người", "👪"], "numtime": ["Số đếm & Thời gian", "🕐"], "colorshape": ["Màu sắc & Hình dạng", "🎨"], "body": ["Cơ thể người", "🧍"], "food": ["Đồ ăn & Thức uống", "🍜"], "animal": ["Động vật", "🐾"], "house": ["Nhà cửa & Đồ vật", "🏠"], "clothes": ["Quần áo", "👕"], "school": ["Trường học", "🏫"], "nature": ["Thiên nhiên & Thời tiết", "🌤️"], "transport": ["Giao thông & Địa điểm", "🚌"], "verb1": ["Động từ cơ bản", "🏃"], "adj1": ["Tính từ cơ bản", "✨"], "work": ["Công việc & Văn phòng", "💼"], "tech": ["Công nghệ & Internet", "💻"], "health": ["Sức khỏe & Y tế", "🏥"], "travel": ["Du lịch", "🧳"], "emotion": ["Cảm xúc & Tính cách", "😊"], "shopping": ["Mua sắm & Tiền bạc", "🛍️"], "sport": ["Thể thao", "🏆"], "hobby": ["Giải trí & Sở thích", "🎵"], "environment": ["Môi trường", "🌱"], "phrasal": ["Cụm động từ (Phrasal Verbs)", "🔗"], "adj2": ["Tính từ nâng cao", "💫"], "social": ["Giao tiếp xã hội", "🗣️"], "media": ["Truyền thông & Tin tức", "📰"], "business": ["Kinh doanh & Kinh tế", "📈"], "politics": ["Chính trị & Xã hội", "🏛️"], "science": ["Khoa học & Nghiên cứu", "🔬"], "law": ["Luật pháp", "⚖️"], "academic": ["Học thuật & Viết luận", "🎓"], "abstract": ["Từ vựng trừu tượng", "🧠"], "art": ["Văn học & Nghệ thuật", "🎭"], "psychology": ["Tâm lý học", "🧩"], "verb3": ["Động từ học thuật", "⚙️"], "idiom": ["Thành ngữ thông dụng", "💬"], "collocation": ["Collocation (Kết hợp từ)", "🧷"]};
+
+const LEVEL_META = {"1": {"name": "Cơ bản", "sub": "Beginner", "color": "lvl1"}, "2": {"name": "Trung cấp", "sub": "Intermediate", "color": "lvl2"}, "3": {"name": "Nâng cao", "sub": "Advanced", "color": "lvl3"}};
+
+function parseVocab(raw) {
+  return raw.split('\n').filter(Boolean).map((line, idx) => {
+    const [en, vn, level, cat] = line.split('|');
+    return { id: idx, en, vn, level: Number(level), cat };
+  });
+}
+
+function buildVocab(){
+  const list = parseVocab(VOCAB_RAW);
+  const byKey = new Map(list.map(w => [w.en.toLowerCase(), w]));
+  // Dữ liệu bổ sung (vocab-extra.js): từ mới + câu ví dụ
+  const extra = (typeof VOCAB_EXTRA_RAW === 'string') ? VOCAB_EXTRA_RAW : '';
+  for (const line of extra.split('\n')){
+    const s = line.trim();
+    if (!s || s.startsWith('//')) continue;
+    if (s[0] === '@'){
+      const [en, ex, exVn] = s.slice(1).split('|');
+      const w = byKey.get((en || '').trim().toLowerCase());
+      if (w && ex && !w.ex){ w.ex = ex.trim(); w.exVn = (exVn || '').trim(); }
+      continue;
+    }
+    const [en, vn, level, cat, ex, exVn] = s.split('|');
+    if (!en || !vn || !CAT_META[cat] || ![1,2,3].includes(Number(level))) continue;
+    const key = en.trim().toLowerCase();
+    if (byKey.has(key)) continue;
+    const w = { id: list.length, en: en.trim(), vn: vn.trim(), level: Number(level), cat, ex: (ex || '').trim(), exVn: (exVn || '').trim() };
+    list.push(w); byKey.set(key, w);
+  }
+  return list;
+}
+const VOCAB = buildVocab();
+const VOCAB_BY_EN = new Map(VOCAB.map(w => [w.en.toLowerCase(), w]));
+// ============================================================
+// APP.JS — Part 1: state, storage, render shell, utilities
+// ============================================================
+
+const MODES = {
+  mc:     { label: 'Trắc nghiệm',          icon:'🎯', desc:'Chọn 1 trong 4 đáp án tiếng Việt.' },
+  lookup: { label: 'Tra từ vựng',          icon:'⌨️', desc:'Nhìn nghĩa tiếng Việt, tự gõ từ tiếng Anh.' },
+  fill:   { label: 'Điền từ khuyết',       icon:'🧩', desc:'Nhìn từ bị che một phần, gõ hoàn chỉnh.' },
+  tf:     { label: 'Đúng / Sai',           icon:'⚖️', desc:'Phản xạ nhanh: nghĩa hiển thị đúng hay sai?' },
+  decode: { label: 'Giải mã chữ cái',      icon:'🔀', desc:'Chữ cái bị xáo trộn, sắp xếp lại cho đúng.' },
+  listen: { label: 'Nghe & chọn nghĩa',    icon:'🔊', desc:'Nghe phát âm, chọn nghĩa tiếng Việt đúng.' },
+  mixed:  { label: 'Thử thách tổng hợp',   icon:'🌀', desc:'Số câu x3, xoay vòng cả 5 dạng bài.' },
+  flash:  { label: 'Flashcard',            icon:'🃏', desc:'Lật thẻ ghi nhớ theo tốc độ của riêng bạn.' },
+  free:   { label: 'Giấy nháp tự do',      icon:'📝', desc:'Gõ từ bất kỳ để tự kiểm tra, không tính giờ.' },
+};
+
+const S = {
+  view: 'loading',
+  theme: 'dark',
+  stats: { xp:0, streak:0, lastStudyDate:null, totalCorrect:0, totalAttempts:0, totalSessions:0 },
+  favorites: new Set(),
+  mistakes: {},
+  customLists: {},
+  library: { level:'all', cat:'all', search:'', limit:60, source:'home' },
+  pendingSource: null,   // { words, label } chosen from library/custom, waiting at Setup
+  session: null,
+  lastResult: null,
+  editingListName: null,
+  toastQueue: [],
+};
+
+// ---------- storage ----------
+// Lưu trong localStorage của trình duyệt (tiền tố riêng để không đụng app khác
+// cùng domain github.io). Nếu localStorage bị chặn, dữ liệu chỉ giữ trong bộ nhớ.
+const STORE_PREFIX = 'enmaster:v1:';
+const memStore = {};
+let booted = false;
+function lsAvailable(){
+  try{ const k='__enmaster_test'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }
+  catch(e){ return false; }
+}
+const HAS_LS = lsAvailable();
+let storageWarned = false;
+function warnStorage(){
+  if (storageWarned) return; storageWarned = true;
+  setTimeout(()=> toast('⚠️ Trình duyệt chặn lưu dữ liệu. Hãy xuất file sao lưu trong mục Thống kê.'), 300);
+}
+async function loadKey(key, fallback){
+  try{
+    if (HAS_LS){
+      const raw = localStorage.getItem(STORE_PREFIX + key);
+      return raw == null ? fallback : JSON.parse(raw);
+    }
+    if (key in memStore) return JSON.parse(memStore[key]);
+  }catch(e){
+    // Dữ liệu hỏng → dùng mặc định, nhưng giữ lại bản hỏng để có thể cứu, không ghi đè mất.
+    try{ if (HAS_LS){ const bad = localStorage.getItem(STORE_PREFIX + key); if (bad) localStorage.setItem(STORE_PREFIX + 'corrupt:' + key, bad); } }catch(_){}
+  }
+  return fallback;
+}
+async function saveKey(key, value){
+  const s = JSON.stringify(value);
+  try{
+    if (HAS_LS) localStorage.setItem(STORE_PREFIX + key, s);
+    else { memStore[key] = s; warnStorage(); }
+  }catch(e){ memStore[key] = s; warnStorage(); }
+}
+const persistStats = () => saveKey('stats', S.stats);
+const persistFavorites = () => saveKey('favorites', [...S.favorites]);
+const persistMistakes = () => saveKey('mistakes', S.mistakes);
+const persistCustomLists = () => saveKey('customLists', S.customLists);
+const persistTheme = () => saveKey('theme', S.theme);
+function persistAll(){
+  if (!booted) return; // tránh ghi đè dữ liệu cũ bằng giá trị mặc định khi chưa tải xong
+  persistStats(); persistFavorites(); persistMistakes(); persistCustomLists(); persistTheme();
+}
+window.addEventListener('pagehide', persistAll);
+// Nhiều tab: khi tab khác lưu dữ liệu, tab này nạp lại để lần lưu sau không ghi đè mất dữ liệu mới.
+window.addEventListener('storage', (e) => {
+  if (!booted || !e.key || !e.key.startsWith(STORE_PREFIX) || e.newValue == null) return;
+  let v; try{ v = JSON.parse(e.newValue); }catch(_){ return; }
+  const key = e.key.slice(STORE_PREFIX.length);
+  if (key === 'stats') S.stats = Object.assign({}, STATS_DEFAULTS, v);
+  else if (key === 'favorites' && Array.isArray(v)) S.favorites = new Set(v);
+  else if (key === 'mistakes' && v && typeof v === 'object') S.mistakes = v;
+  else if (key === 'customLists' && v && typeof v === 'object') S.customLists = v;
+  else return;
+  if (S.view !== 'quiz' && S.view !== 'flashcards' && S.editingListName === null) render();
+});
+document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState === 'hidden') persistAll(); });
+
+// ---------- backup / restore ----------
+const STATS_DEFAULTS = {xp:0, streak:0, lastStudyDate:null, totalCorrect:0, totalAttempts:0, totalSessions:0};
+function buildBackup(){
+  return { app:'english-master', version:1, exportedAt:new Date().toISOString(),
+    data:{ stats:S.stats, favorites:[...S.favorites], mistakes:S.mistakes, customLists:S.customLists, theme:S.theme } };
+}
+function exportData(){
+  S.stats.lastBackup = Date.now();
+  persistStats();
+  const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'english-master-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 1500);
+  toast('✅ Đã xuất file sao lưu');
+  render();
+}
+function parseBackup(text){
+  const d = JSON.parse(text);
+  if (!d || d.app !== 'english-master' || !d.data || typeof d.data !== 'object') throw new Error('bad');
+  const x = d.data;
+  const stats = Object.assign({}, STATS_DEFAULTS, (x.stats && typeof x.stats === 'object') ? x.stats : {});
+  ['xp','streak','totalCorrect','totalAttempts','totalSessions'].forEach(k=>{ stats[k] = Number(stats[k]) || 0; });
+  return {
+    stats,
+    favorites: Array.isArray(x.favorites) ? x.favorites.filter(v=>typeof v==='string') : [],
+    mistakes: (x.mistakes && typeof x.mistakes === 'object' && !Array.isArray(x.mistakes)) ? x.mistakes : {},
+    customLists: (x.customLists && typeof x.customLists === 'object' && !Array.isArray(x.customLists)) ? x.customLists : {},
+    theme: x.theme === 'light' ? 'light' : 'dark',
+  };
+}
+function importData(file){
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try{ parsed = parseBackup(String(reader.result)); }
+    catch(e){ toast('❌ File không hợp lệ'); return; }
+    showConfirm('Khôi phục sẽ ghi đè toàn bộ dữ liệu hiện tại (XP, streak, từ hay sai, yêu thích, danh sách riêng). Tiếp tục?', () => {
+      S.stats = parsed.stats;
+      S.favorites = new Set(parsed.favorites);
+      S.mistakes = parsed.mistakes;
+      S.customLists = parsed.customLists;
+      S.theme = parsed.theme;
+      document.documentElement.setAttribute('data-theme', S.theme);
+      persistAll();
+      toast('✅ Đã khôi phục dữ liệu');
+      render();
+    }, 'Khôi phục');
+  };
+  reader.onerror = () => toast('❌ Không đọc được file');
+  reader.readAsText(file);
+}
+function resetAllData(){
+  S.stats = Object.assign({}, STATS_DEFAULTS);
+  S.favorites = new Set(); S.mistakes = {}; S.customLists = {};
+  persistAll();
+  toast('Đã xóa toàn bộ dữ liệu');
+  render();
+}
+
+// ---------- small utils ----------
+// Một số từ trong kho dữ liệu mang nhãn phân biệt nội bộ (vd "train-verb", "paint (sơn)").
+// Nhãn chỉ dùng làm khóa riêng; khi hiển thị, đọc, và chấm bài thì dùng dạng đã làm sạch.
+const EN_CLEAN_EXCEPT = { 'shirt-button':'shirt button', 'package-shop':'package' };
+const EN_LABEL_RE = /-(verb|noun|tech|biz|pol|sci|econ|corp|media|daily|climate|illness|basic|mail|tool|device|adv|travel|plan|sport)$/i;
+function cleanEn(en){
+  const k = String(en);
+  if (EN_CLEAN_EXCEPT[k.toLowerCase()]) return EN_CLEAN_EXCEPT[k.toLowerCase()];
+  return k.replace(/\s*\([^)]*\)\s*$/, '').replace(EN_LABEL_RE, '');
+}
+function $(sel, root=document){ return root.querySelector(sel); }
+function $all(sel, root=document){ return [...root.querySelectorAll(sel)]; }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function todayKey(){ return new Date().toDateString(); }
+function yesterdayKey(){ const d = new Date(); d.setDate(d.getDate()-1); return d.toDateString(); }
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+function fmt1(n){ return (Math.round(n*10)/10).toFixed(1); }
+
+let speaking = false;
+function speak(text){
+  try{
+    if (!('speechSynthesis' in window)) { toast('Trình duyệt này không hỗ trợ phát âm.'); return; }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = 0.88;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* ignore */ }
+}
+
+let toastTimer = null;
+function toast(msg){
+  let node = document.getElementById('toast');
+  if (!node){
+    node = document.createElement('div');
+    node.id = 'toast';
+    node.className = 'toast hidden';
+    document.body.appendChild(node);
+  }
+  node.textContent = msg;
+  node.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> node.classList.add('hidden'), 2200);
+}
+
+function xpLevel(xp){
+  // Simple curve: level n requires n*120 cumulative xp
+  let lvl = 1, need = 120, total = 0;
+  while (xp >= total + need){ total += need; lvl++; need += 40; }
+  const into = xp - total;
+  return { level: lvl, into, need, pct: clamp(Math.round(into/need*100),0,100) };
+}
+
+function levelName(n){ return LEVEL_META[String(n)]?.name || 'Tự tạo'; }
+function catName(c){ return c === 'custom' ? 'Bộ từ của tôi' : (CAT_META[c]?.[0] || c); }
+function catIcon(c){ return c === 'custom' ? '✏️' : (CAT_META[c]?.[1] || '📘'); }
+
+// ---------- mistakes bookkeeping ----------
+function markWrong(word){
+  const key = word.en.toLowerCase();
+  const cur = S.mistakes[key];
+  S.mistakes[key] = { en: word.en, vn: word.vn, level: word.level, cat: word.cat, count: (cur?.count||0)+1, last: Date.now() };
+}
+function markHeal(word){
+  const key = word.en.toLowerCase();
+  if (S.mistakes[key]){
+    S.mistakes[key].count -= 1;
+    if (S.mistakes[key].count <= 0) delete S.mistakes[key];
+  }
+}
+function mistakeList(){
+  return Object.values(S.mistakes).sort((a,b)=> b.count - a.count || b.last - a.last);
+}
+
+// ---------- favorites ----------
+function toggleFavorite(en){
+  const key = en.toLowerCase();
+  if (S.favorites.has(key)) S.favorites.delete(key); else S.favorites.add(key);
+  persistFavorites();
+}
+function favoriteWords(){
+  return [...S.favorites].map(k => VOCAB_BY_EN.get(k)).filter(Boolean);
+}
+
+// ---------- streak / xp on session end ----------
+// Chuỗi ngày hiển thị: nếu đã bỏ học quá 1 ngày thì chuỗi đã đứt (về 0), dù giá trị lưu chưa cập nhật.
+function currentStreak(){
+  const d = S.stats.lastStudyDate;
+  return (d === todayKey() || d === yesterdayKey()) ? (S.stats.streak || 0) : 0;
+}
+function bumpStreakAndXp(xpGain){
+  const today = todayKey();
+  if (S.stats.lastStudyDate !== today){
+    S.stats.streak = (S.stats.lastStudyDate === yesterdayKey()) ? S.stats.streak + 1 : 1;
+    S.stats.lastStudyDate = today;
+  }
+  S.stats.xp += xpGain;
+}
+
+// ---------- render shell ----------
+function navigate(view, opts={}){
+  // Defensive cleanup: a session/flashcard-session should only ever be "live"
+  // while its own view is showing. Leaving either view through any path other
+  // than its own cancel/exit action still safely tears it down here, so the
+  // top bar and state never fall out of sync with what's on screen.
+  if (view !== 'quiz' && S.session){ clearInterval(S.session.timerHandle); clearTimeout(S.session.advanceHandle); S.session = null; }
+  if (view !== 'flashcards'){ S.flashSession = null; }
+
+  S.view = view;
+  Object.assign(S, opts);
+  render();
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+// render() redraws the current view WITHOUT resetting scroll — used both by
+// navigate() (which explicitly scrolls to top after) and by in-place updates
+// like toggling a favorite star or switching a filter chip, where snapping
+// the page back to top would be jarring while browsing a long list.
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = topbarHtml() + `<main id="main">${viewFor(S.view)}</main>`;
+  afterRender(S.view);
+}
+
+function topbarHtml(){
+  const lvl = xpLevel(S.stats.xp);
+  const inSession = !!S.session && S.view === 'quiz';
+  const inFlash = !!S.flashSession && S.view === 'flashcards';
+  return `
+  <header class="topbar">
+    <button class="topbar__brand" data-action="nav" data-view="home" ${(inSession||inFlash)?'disabled':''}>
+      <span class="topbar__brand-mark">E</span>
+      <span class="topbar__brand-text">english<span class="text-cyan">://</span>master<span class="cursor"></span></span>
+    </button>
+    <div class="topbar__actions">
+      ${!(inSession||inFlash) ? `
+      <div class="pill streak" title="Chuỗi ngày học liên tiếp">🔥 <strong>${currentStreak()}</strong></div>
+      <div class="pill" title="Cấp độ kinh nghiệm">Cấp <strong>${lvl.level}</strong></div>
+      <button class="iconbtn" data-action="toggle-theme" title="Đổi giao diện sáng/tối">${S.theme==='dark' ? '☀️' : '🌙'}</button>
+      ` : inSession
+        ? `<button class="btn btn-ghost btn-sm" data-action="cancel-quiz">✕ Hủy bài</button>`
+        : `<button class="btn btn-ghost btn-sm" data-action="exit-flashcards">✕ Thoát</button>`
+      }
+    </div>
+  </header>`;
+}
+
+function viewFor(view){
+  switch(view){
+    case 'home': return viewHome();
+    case 'library': return viewLibrary();
+    case 'setup': return viewSetup();
+    case 'quiz': return viewQuiz();
+    case 'results': return viewResults();
+    case 'flashcards': return viewFlashcards();
+    case 'mistakes': return viewMistakes();
+    case 'favorites': return viewFavorites();
+    case 'stats': return viewStats();
+    case 'custom': return viewCustom();
+    default: return viewHome();
+  }
+}
+// ============================================================
+// APP.JS — Part 2: Home view + Vocabulary Library view
+// ============================================================
+
+function viewHome(){
+  const lvl = xpLevel(S.stats.xp);
+  const acc = S.stats.totalAttempts ? Math.round(S.stats.totalCorrect/S.stats.totalAttempts*100) : null;
+  const mistakeCount = mistakeList().length;
+  const favCount = S.favorites.size;
+  const customCount = Object.keys(S.customLists).length;
+
+  return `
+  <section class="term corner-mark">
+    <div class="term__bar">
+      <div class="term__dots"><span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span></div>
+      <span class="term__path">~/english-master/README</span>
+    </div>
+    <div class="term__body">
+      <div class="eyebrow">Học từ vựng tiếng anh</div>
+      <h1 style="font-size:26px; margin-top:8px; line-height:1.3;">${VOCAB.length} từ vựng, 8 kiểu luyện tập,<br/>một trình học được xây từ chương trình của bạn.</h1>
+      <p class="muted" style="margin-top:10px; font-size:14.5px;">Chọn từ thư viện có sẵn hoặc dán bộ từ riêng của bạn, rồi luyện theo cách bạn thích: trắc nghiệm, gõ từ, giải mã, nghe, flashcard...</p>
+      <div class="row gap-10" style="margin-top:18px; flex-wrap:wrap;">
+        <button class="btn btn-primary btn-lg" data-action="nav" data-view="library">📚 Chọn từ để học ngay</button>
+        <button class="btn btn-secondary btn-lg" data-action="nav" data-view="custom">✏️ Dùng bộ từ của tôi</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="stat-strip" style="margin-top:18px;">
+    <div class="stat-chip"><div class="stat-chip__value text-orange">${currentStreak()}🔥</div><div class="stat-chip__label">Ngày liên tiếp</div></div>
+    <div class="stat-chip"><div class="stat-chip__value text-cyan">${S.stats.totalAttempts}</div><div class="stat-chip__label">Lượt đã luyện</div></div>
+    <div class="stat-chip"><div class="stat-chip__value text-green">${acc==null?'–':acc+'%'}</div><div class="stat-chip__label">Độ chính xác</div></div>
+    <div class="stat-chip"><div class="stat-chip__value">Lv.${lvl.level}</div><div class="stat-chip__label">${S.stats.xp} XP</div></div>
+  </div>
+
+  <div class="section-head">
+    <div><div class="eyebrow">Luyện tập</div><div class="section-title">Bạn muốn làm gì tiếp theo?</div></div>
+  </div>
+  <div class="grid grid-2">
+    <button class="action-card" data-action="nav" data-view="library">
+      <div class="action-card__icon">📚</div>
+      <div class="action-card__title">Thư viện ${VOCAB.length} từ</div>
+      <div class="action-card__sub">Duyệt theo cấp độ & ${Object.keys(CAT_META).length} chủ đề, có gợi ý sẵn.</div>
+    </button>
+    <button class="action-card" data-action="start-flashcards-quick">
+      <div class="action-card__icon">🃏</div>
+      <div class="action-card__title">Flashcard học nhanh</div>
+      <div class="action-card__sub">Lật thẻ để ghi nhớ, không tính giờ, không áp lực.</div>
+    </button>
+    <button class="action-card" data-action="nav" data-view="mistakes">
+      <div class="action-card__icon">🔁</div>
+      <div class="action-card__title">Ôn từ hay sai${mistakeCount?` <span class="badge badge-lvl3">${mistakeCount}</span>`:''}</div>
+      <div class="action-card__sub">${mistakeCount ? 'Hệ thống tự gom các từ bạn còn nhầm.' : 'Chưa có từ nào cần ôn — quá tốt!'}</div>
+    </button>
+    <button class="action-card" data-action="nav" data-view="favorites">
+      <div class="action-card__icon">⭐</div>
+      <div class="action-card__title">Từ yêu thích${favCount?` <span class="badge badge-lvl2">${favCount}</span>`:''}</div>
+      <div class="action-card__sub">${favCount ? 'Ôn riêng những từ bạn đã đánh dấu.' : 'Đánh dấu sao cho từ khó nhớ khi duyệt thư viện.'}</div>
+    </button>
+    <button class="action-card" data-action="nav" data-view="custom">
+      <div class="action-card__icon">✏️</div>
+      <div class="action-card__title">Bộ từ của tôi${customCount?` <span class="badge badge-lvl1">${customCount}</span>`:''}</div>
+      <div class="action-card__sub">Tự nhập từ theo định dạng "tiếng anh - tiếng việt".</div>
+    </button>
+    <button class="action-card" data-action="nav" data-view="stats">
+      <div class="action-card__icon">📊</div>
+      <div class="action-card__title">Thống kê học tập</div>
+      <div class="action-card__sub">Xem tiến độ, chuỗi ngày học và cấp độ của bạn.</div>
+    </button>
+  </div>
+  `;
+}
+
+// ---------- Library ----------
+function categoriesForLevel(level){
+  if (level === 'all') return Object.keys(CAT_META);
+  const set = new Set();
+  for (const w of VOCAB) if (String(w.level) === String(level)) set.add(w.cat);
+  return Object.keys(CAT_META).filter(c => set.has(c));
+}
+
+function filteredLibraryWords(){
+  const { level, cat, search } = S.library;
+  const q = search.trim().toLowerCase();
+  return VOCAB.filter(w => {
+    if (level !== 'all' && String(w.level) !== String(level)) return false;
+    if (cat !== 'all' && w.cat !== cat) return false;
+    if (q && !(w.en.toLowerCase().includes(q) || w.vn.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function viewLibrary(){
+  const results = filteredLibraryWords();
+  const shown = results.slice(0, S.library.limit);
+  const cats = categoriesForLevel(S.library.level);
+
+  const levelChips = ['all','1','2','3'].map(lv => {
+    const label = lv==='all' ? 'Tất cả' : levelName(lv);
+    return `<button class="chip ${S.library.level===lv?'active':''}" data-action="lib-set-level" data-level="${lv}">${label}</button>`;
+  }).join('');
+
+  const catChips = ['all', ...cats].map(c => {
+    const label = c==='all' ? 'Mọi chủ đề' : `${catIcon(c)} ${catName(c)}`;
+    return `<button class="chip ${S.library.cat===c?'active':''}" data-action="lib-set-cat" data-cat="${c}">${label}</button>`;
+  }).join('');
+
+  const rows = shown.map(renderWordRow).join('');
+  const empty = results.length === 0 ? emptyLibraryHtml() : '';
+  const loadMore = results.length > shown.length
+    ? `<button class="btn btn-secondary btn-block" data-action="lib-load-more">Xem thêm (${results.length - shown.length} từ nữa)</button>`
+    : '';
+
+  return `
+  <div class="row-between">
+    <div><div class="eyebrow">Thư viện từ vựng</div><div class="section-title">${VOCAB.length} từ · Cơ bản → Nâng cao</div></div>
+  </div>
+
+  <div class="field" style="margin-top:14px;">
+    <input class="input js-search" id="librarySearch" type="text" placeholder="Tìm theo tiếng Anh hoặc tiếng Việt..." value="${escapeHtml(S.library.search)}" />
+  </div>
+
+  <div class="chip-row">${levelChips}</div>
+  <div class="chip-row" style="margin-top:2px;">${catChips}</div>
+
+  <div class="row-between" style="margin: 16px 0 10px;">
+    <span class="muted" style="font-size:13px;" id="libResultCount">${results.length} từ phù hợp</span>
+    <button class="btn btn-primary btn-sm" id="libStartBtn" data-action="lib-start" ${results.length===0?'disabled':''}>Luyện tập nhóm này →</button>
+  </div>
+
+  <div id="libEmptyWrap">${empty}</div>
+  <div id="libRows">${rows}</div>
+  <div id="libLoadMoreWrap">${loadMore}</div>
+  `;
+}
+
+function renderWordRow(w){
+  const isFav = S.favorites.has(w.en.toLowerCase());
+  const exText = w.ex || (VOCAB_BY_EN.get(w.en.toLowerCase()) || {}).ex || '';
+  return `
+    <div class="word-row">
+      <div class="word-row__main">
+        <div class="word-row__en">${escapeHtml(cleanEn(w.en))} <span class="badge badge-lvl${w.level}" style="margin-left:6px;">${levelName(w.level)}</span></div>
+        <div class="word-row__vn">${escapeHtml(w.vn)}</div>
+        ${exText ? `<div class="word-row__ex">${escapeHtml(exText)}</div>` : ''}
+        <div class="word-row__cat">${catIcon(w.cat)} ${catName(w.cat)}</div>
+      </div>
+      <div class="word-row__actions">
+        <button class="iconbtn small" data-action="speak" data-text="${escapeHtml(cleanEn(w.en))}" title="Phát âm">🔊</button>
+        <button class="iconbtn small ${isFav?'on':''}" data-action="toggle-fav" data-en="${escapeHtml(w.en)}" title="Yêu thích">${isFav?'★':'☆'}</button>
+      </div>
+    </div>`;
+}
+
+function emptyLibraryHtml(){
+  return `
+    <div class="empty-state">
+      <div class="empty-state__icon">🔍</div>
+      <div>Không tìm thấy từ nào khớp bộ lọc.</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;" data-action="lib-reset">Xóa bộ lọc</button>
+    </div>`;
+}
+
+function refreshLibraryResults(){
+  const results = filteredLibraryWords();
+  const shown = results.slice(0, S.library.limit);
+  const rowsEl = document.getElementById('libRows');
+  if (rowsEl) rowsEl.innerHTML = shown.map(renderWordRow).join('');
+  const countEl = document.getElementById('libResultCount');
+  if (countEl) countEl.textContent = `${results.length} từ phù hợp`;
+  const startBtn = document.getElementById('libStartBtn');
+  if (startBtn) startBtn.disabled = results.length === 0;
+  const loadMoreWrap = document.getElementById('libLoadMoreWrap');
+  if (loadMoreWrap){
+    loadMoreWrap.innerHTML = results.length > shown.length
+      ? `<button class="btn btn-secondary btn-block" data-action="lib-load-more">Xem thêm (${results.length - shown.length} từ nữa)</button>` : '';
+  }
+  const emptyWrap = document.getElementById('libEmptyWrap');
+  if (emptyWrap) emptyWrap.innerHTML = results.length === 0 ? emptyLibraryHtml() : '';
+}
+// ============================================================
+// APP.JS — Part 3: Setup view + Custom vocabulary view
+// ============================================================
+
+function dedupeByEn(words){
+  const seen = new Set(); const out = [];
+  for (const w of words){ const k=w.en.toLowerCase(); if(!seen.has(k)){ seen.add(k); out.push(w); } }
+  return out;
+}
+
+function quickFlashcardWords(){
+  const pool = dedupeByEn([...mistakeList(), ...favoriteWords()]);
+  if (pool.length >= 6) return sampleArrayLocal(pool, Math.min(20, pool.length));
+  return sampleArrayLocal(VOCAB.filter(w=>w.level===1), 20);
+}
+function sampleArrayLocal(arr, n){
+  const a = arr.slice();
+  for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a.slice(0, Math.min(n,a.length));
+}
+
+function setPendingSource(words, label){
+  S.pendingSource = { words, label };
+  S.setupCount = Math.min(15, words.length);
+  S.setupMode = S.setupMode || 'mc';
+  S.setupTime = S.setupTime || 8;
+}
+
+function viewSetup(){
+  const src = S.pendingSource;
+  if (!src || !src.words.length){
+    return `<div class="empty-state"><div class="empty-state__icon">📭</div><div>Chưa có bộ từ nào được chọn.</div>
+      <button class="btn btn-primary btn-sm" style="margin-top:14px;" data-action="nav" data-view="library">Chọn từ trong thư viện</button></div>`;
+  }
+  const total = src.words.length;
+  const presets = [10,15,20,30,50].filter(n => n < total);
+  presets.push(total);
+  const uniquePresets = [...new Set(presets)].sort((a,b)=>a-b);
+  const countChips = uniquePresets.map(n => `<button class="chip ${S.setupCount===n?'active':''}" data-action="setup-set-count" data-count="${n}">${n===total?'Tất cả · '+n:n}</button>`).join('');
+
+  const modeOrder = ['mc','lookup','fill','tf','decode','listen','mixed','flash','free'];
+  const modeCards = modeOrder.map(key => {
+    const m = MODES[key];
+    const active = S.setupMode === key;
+    return `<button class="action-card" style="${active?'border-color:var(--cyan); background:var(--surface-hover);':''}" data-action="setup-set-mode" data-mode="${key}">
+      <div class="action-card__icon">${m.icon}</div>
+      <div class="action-card__title">${m.label}${active?' <span class=\"text-cyan\">✓</span>':''}</div>
+      <div class="action-card__sub">${m.desc}</div>
+    </button>`;
+  }).join('');
+
+  const needsTimer = !['free','flash'].includes(S.setupMode);
+  const tooFew = total < 4 && needsTimer;
+
+  return `
+  <div class="eyebrow">Thiết lập buổi luyện tập</div>
+  <div class="section-title">${escapeHtml(src.label)}</div>
+  <p class="muted" style="font-size:13.5px; margin-top:4px;">${total} từ khả dụng trong bộ này.</p>
+
+  ${total > uniquePresets[0] ? `
+  <div class="field" style="margin-top:20px;">
+    <label>Số từ mỗi lượt học</label>
+    <div class="chip-row">${countChips}</div>
+  </div>` : ''}
+
+  <div class="field">
+    <label>Cách luyện tập</label>
+    <div class="grid grid-2">${modeCards}</div>
+  </div>
+
+  <div class="field" id="timeField" ${needsTimer?'':'style="display:none;"'}>
+    <label>Thời gian mỗi câu: <strong class="text-cyan">${S.setupTime}s</strong></label>
+    <div class="slider-row">
+      <span class="muted" style="font-family:var(--font-mono); font-size:12px;">1s</span>
+      <input type="range" min="1" max="20" step="1" value="${S.setupTime}" id="timeSlider"/>
+      <span class="muted" style="font-family:var(--font-mono); font-size:12px;">20s</span>
+    </div>
+  </div>
+
+  ${tooFew ? `<p class="error-text">Cần tối thiểu 4 từ để luyện chế độ tính giờ. Hãy chọn thêm từ hoặc dùng Flashcard / Giấy nháp.</p>` : ''}
+
+  <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px;" data-action="start-session" ${tooFew?'disabled':''}>Bắt đầu ${MODES[S.setupMode].icon} →</button>
+  `;
+}
+
+// ---------- Custom vocabulary lists ----------
+function parseCustomInput(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const dict = []; const seen = new Set(); let badCount = 0;
+  for (const line of lines){
+    // Ưu tiên dấu " - " có khoảng trắng hai bên (cho phép từ như well-known, mother-in-law);
+    // nếu không có thì dùng dấu "-" đầu tiên như trước.
+    let idx = line.search(/\s[-–—]\s/);
+    let sepLen = 0;
+    if (idx !== -1){ sepLen = line.slice(idx).match(/^\s[-–—]\s/)[0].length; }
+    else { idx = line.indexOf('-'); sepLen = 1; }
+    if (idx === -1){ badCount++; continue; }
+    const en = line.slice(0, idx).trim().toLowerCase();
+    let vn = line.slice(idx + sepLen).trim();
+    if (vn) vn = vn.charAt(0).toUpperCase() + vn.slice(1);
+    if (en && vn && !seen.has(en)){ seen.add(en); dict.push({ en, vn }); }
+    else badCount++;
+  }
+  return { dict, badCount };
+}
+
+function viewCustom(){
+  const names = Object.keys(S.customLists);
+  const editing = S.editingListName !== null;
+
+  if (editing){
+    const isNew = S.editingListName === '';
+    const existing = isNew ? null : S.customLists[S.editingListName];
+    const nameVal = isNew ? '' : S.editingListName;
+    const textVal = existing ? existing.map(w=>`${w.en} - ${w.vn}`).join('\n') : '';
+    return `
+    <div class="eyebrow">${isNew?'Tạo bộ từ mới':'Sửa bộ từ'}</div>
+    <div class="section-title">Bộ từ vựng tùy chỉnh</div>
+    <div class="field" style="margin-top:16px;">
+      <label>Tên bộ từ</label>
+      <input class="input" id="customName" placeholder="Ví dụ: Từ vựng bài 5" value="${escapeHtml(nameVal)}"/>
+    </div>
+    <div class="field">
+      <label>Danh sách từ — mỗi dòng theo định dạng <strong>tiếng anh - tiếng việt</strong></label>
+      <textarea class="input" id="customText" rows="10" placeholder="dog - con chó
+run - chạy
+beautiful - xinh đẹp">${escapeHtml(textVal)}</textarea>
+      <div class="hint">Cần tối thiểu 4 cặp từ hợp lệ. Mỗi dòng một từ, dùng dấu "-" để ngăn cách.</div>
+      <div id="customError"></div>
+    </div>
+    <div class="row gap-10">
+      <button class="btn btn-primary" data-action="custom-save">💾 Lưu bộ từ</button>
+      <button class="btn btn-ghost" data-action="custom-cancel-edit">Hủy</button>
+    </div>
+    `;
+  }
+
+  const listRows = names.length ? names.map(name => {
+    const words = S.customLists[name];
+    return `
+    <div class="word-row" style="align-items:flex-start;">
+      <div class="word-row__main">
+        <div class="word-row__en">${escapeHtml(name)}</div>
+        <div class="word-row__vn">${words.length} từ</div>
+      </div>
+      <div class="word-row__actions">
+        <button class="btn btn-primary btn-sm" data-action="custom-practice" data-name="${escapeHtml(name)}">Luyện tập</button>
+        <button class="iconbtn small" data-action="custom-edit" data-name="${escapeHtml(name)}" title="Sửa">✏️</button>
+        <button class="iconbtn small" data-action="custom-delete" data-name="${escapeHtml(name)}" title="Xóa">🗑️</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty-state"><div class="empty-state__icon">✏️</div><div>Bạn chưa có bộ từ nào. Tạo bộ đầu tiên nhé!</div></div>`;
+
+  return `
+  <div class="row-between">
+    <div><div class="eyebrow">Bộ từ của tôi</div><div class="section-title">Từ vựng tự nhập</div></div>
+    <button class="btn btn-primary btn-sm" data-action="custom-new">+ Tạo mới</button>
+  </div>
+  <p class="muted" style="font-size:13.5px; margin: 8px 0 18px;">Dán danh sách từ riêng của bạn (giáo trình, bài học trên lớp...) theo đúng định dạng của chương trình gốc: <strong>tiếng anh - tiếng việt</strong>, mỗi dòng một từ.</p>
+  <div class="stack">${listRows}</div>
+  `;
+}
+// ============================================================
+// APP.JS — Part 4: Quiz engine (session build, timer, answer flow)
+// ============================================================
+
+function buildQuestions(words, mode){
+  const vnPool = words.map(w=>w.vn);
+  const shuffled = shuffleArray(words);
+  if (mode === 'mc' || mode === 'listen'){
+    return shuffled.map(w => ({ type:mode, word:w, ...buildMCQuestion(w.en, w.vn, vnPool) }));
+  }
+  if (mode === 'tf'){
+    const flags = buildBalancedTFFlags(shuffled.length);
+    return shuffled.map((w,i) => ({ type:'tf', word:w, ...buildTrueFalse(w.en, w.vn, vnPool, flags[i]) }));
+  }
+  if (mode === 'mixed'){
+    let all = [];
+    for (let r=0;r<3;r++) all = all.concat(shuffleArray(words));
+    const flags = buildBalancedTFFlags(all.length);
+    const cycle = ['mc','tf','fill','decode','lookup'];
+    return all.map((w,i) => {
+      const type = cycle[i % 5];
+      if (type==='mc') return { type, word:w, ...buildMCQuestion(w.en,w.vn,vnPool) };
+      if (type==='tf') return { type, word:w, ...buildTrueFalse(w.en,w.vn,vnPool, flags[i]) };
+      return { type, word:w };
+    });
+  }
+  return shuffled.map(w => ({ type: mode, word: w })); // lookup, fill, decode
+}
+
+function startSession(words, mode, timeLimit, sourceLabel){
+  // The two session types are mutually exclusive — always clear the other
+  // one first so the top bar and cancel/exit actions never get confused.
+  if (S.session){ clearInterval(S.session.timerHandle); clearTimeout(S.session.advanceHandle); S.session = null; }
+  S.flashSession = null;
+
+  if (mode === 'flash'){
+    S.flashSession = { words: shuffleArray(words), index:0, flipped:false, knowCount:0, total: words.length, sourceLabel };
+    navigate('flashcards');
+    return;
+  }
+  const questions = buildQuestions(words, mode);
+  S.session = {
+    words, mode, timeLimit, sourceLabel, questions,
+    index:0, scores:[], wrongWords:[],
+    timerStart:null, timerHandle:null, answered:false, freeLog:[],
+  };
+  navigate('quiz');
+}
+
+function cancelSession(){
+  if (S.session){ clearInterval(S.session.timerHandle); clearTimeout(S.session.advanceHandle); }
+  S.session = null;
+  navigate('setup');
+}
+
+// ---------- rendering ----------
+function renderTiles(word, kind){
+  if (kind === 'fill'){
+    const arr = maskWord(word);
+    return arr.map(x => x.ch === ' '
+      ? '<span class="tile space"></span>'
+      : `<span class="tile ${x.masked?'blank':''}">${x.masked?'':escapeHtml(x.ch.toUpperCase())}</span>`
+    ).join('');
+  }
+  const tokens = shuffleWordPerToken(word);
+  return tokens.map(tok => tok.map(ch=>`<span class="tile">${escapeHtml(ch.toUpperCase())}</span>`).join(''))
+               .join('<span class="tile space"></span>');
+}
+
+function renderTimerBar(limit){
+  const N = 24;
+  const segs = Array.from({length:N}, ()=>'<span class="timerbar__seg"></span>').join('');
+  return `<div class="timerbar" id="timerBar">${segs}</div><div class="timer-readout" id="timerReadout">⏳ ${limit.toFixed(1)}s</div>`;
+}
+
+function quizHead(sess, q){
+  return `<div class="quiz-head">
+    <span class="quiz-progress">CÂU ${sess.index+1} / ${sess.questions.length}</span>
+    <span class="quiz-mode-tag">${MODES[q.type]?.icon||''} ${MODES[q.type]?.label||''}</span>
+  </div>`;
+}
+
+function mcBody(q){
+  return `
+  <div class="prompt-word">${escapeHtml(cleanEn(q.word.en))}</div>
+  <div class="mc-options" id="mcOptions">
+    ${q.options.map((opt,i)=>`<button class="mc-opt" data-action="submit-mc" data-idx="${i}"><span class="mc-opt__key">${i+1}</span><span>${escapeHtml(opt)}</span></button>`).join('')}
+  </div>`;
+}
+function listenBody(q){
+  return `
+  <div class="center"><button class="speak-btn lg" data-action="quiz-replay-audio">🔊</button></div>
+  <div class="prompt-sub" style="margin-top:-10px;">Bấm loa để nghe lại từ tiếng Anh</div>
+  <div class="mc-options" id="mcOptions">
+    ${q.options.map((opt,i)=>`<button class="mc-opt" data-action="submit-mc" data-idx="${i}"><span class="mc-opt__key">${i+1}</span><span>${escapeHtml(opt)}</span></button>`).join('')}
+  </div>`;
+}
+function tfBody(q){
+  return `
+  <div class="prompt-word">${escapeHtml(cleanEn(q.word.en))}</div>
+  <p class="center" style="margin-bottom:20px; font-size:15.5px;">nghĩa là: <strong style="color:var(--cyan);">${escapeHtml(q.shownVn)}</strong> ?</p>
+  <div class="tf-row">
+    <button class="tf-btn tf-true" data-action="submit-tf" data-val="1">✓ ĐÚNG</button>
+    <button class="tf-btn tf-false" data-action="submit-tf" data-val="0">✕ SAI</button>
+  </div>`;
+}
+function lookupBody(q){
+  return `
+  <div class="prompt-word" style="font-family:var(--font-body); font-size:26px;">${escapeHtml(q.word.vn)}</div>
+  <p class="prompt-sub">Gõ từ tiếng Anh tương ứng</p>
+  <div class="answer-row">
+    <input class="input" id="answerInput" placeholder="Nhập từ tiếng Anh..." autocomplete="off" autocapitalize="off" spellcheck="false"/>
+    <button class="btn btn-primary" data-action="submit-typed">Trả lời</button>
+  </div>`;
+}
+function fillBody(q){
+  return `
+  <div class="tile-row">${renderTiles(cleanEn(q.word.en),'fill')}</div>
+  <div class="answer-row">
+    <input class="input" id="answerInput" placeholder="Nhập từ hoàn chỉnh..." autocomplete="off" autocapitalize="off" spellcheck="false"/>
+    <button class="btn btn-primary" data-action="submit-typed">Trả lời</button>
+  </div>`;
+}
+function decodeBody(q){
+  return `
+  <div class="tile-row">${renderTiles(cleanEn(q.word.en),'decode')}</div>
+  <div class="answer-row">
+    <input class="input" id="answerInput" placeholder="Sắp xếp lại thành từ đúng..." autocomplete="off" autocapitalize="off" spellcheck="false"/>
+    <button class="btn btn-primary" data-action="submit-typed">Trả lời</button>
+  </div>`;
+}
+
+function viewQuiz(){
+  const sess = S.session;
+  if (!sess) return `<div class="empty-state"><div class="empty-state__icon">📭</div>Không có phiên luyện tập nào đang diễn ra.
+    <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="home">Về trang chủ</button></div></div>`;
+  if (sess.mode === 'free') return viewFreeMode(sess);
+
+  const q = sess.questions[sess.index];
+  const bodyFn = { mc:mcBody, listen:listenBody, tf:tfBody, lookup:lookupBody, fill:fillBody, decode:decodeBody }[q.type];
+
+  return `
+  <div class="term">
+    <div class="term__bar"><div class="term__dots"><span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span></div><span class="term__path">~/practice/${sess.mode}.run</span></div>
+    <div class="term__body">
+      ${quizHead(sess, q)}
+      ${renderTimerBar(sess.timeLimit)}
+      ${bodyFn(q)}
+      <div id="feedbackSlot"></div>
+    </div>
+  </div>`;
+}
+
+function viewFreeMode(sess){
+  const log = sess.freeLog.slice().reverse().map(entry => `
+    <div class="feedback-banner ${entry.ok?'ok':'bad'}">
+      ${entry.ok ? '✅' : '❌'} <strong style="font-family:var(--font-mono);">${escapeHtml(entry.text)}</strong>
+      ${entry.ok ? ' → '+escapeHtml(entry.vn) : ' — không khớp từ nào trong bộ này'}
+    </div>`).join('');
+  return `
+  <div class="term">
+    <div class="term__bar"><div class="term__dots"><span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span></div><span class="term__path">~/practice/free.sh</span></div>
+    <div class="term__body">
+      <div class="eyebrow">Giấy nháp tự do</div>
+      <p class="muted" style="margin-top:8px; font-size:14px;">Gõ bất kỳ từ tiếng Anh nào trong bộ "<strong>${escapeHtml(sess.sourceLabel)}</strong>" để tự kiểm tra nghĩa. Không tính giờ, không chấm điểm.</p>
+      <div class="answer-row" style="margin-top:16px;">
+        <input class="input" id="freeInput" placeholder="Nhập một từ tiếng Anh..." autocomplete="off" autocapitalize="off" spellcheck="false"/>
+        <button class="btn btn-primary" data-action="submit-free">Kiểm tra</button>
+      </div>
+      <div class="stack" style="margin-top:18px;">${log || '<p class="muted" style="font-size:13px;">Kết quả sẽ hiện ở đây khi bạn nhập từ...</p>'}</div>
+    </div>
+  </div>
+  <button class="btn btn-secondary btn-block" style="margin-top:14px;" data-action="cancel-quiz">← Kết thúc giấy nháp</button>
+  `;
+}
+
+// ---------- timer ----------
+function currentRemaining(){
+  const sess = S.session;
+  const elapsed = (performance.now() - sess.timerStart) / 1000;
+  return Math.max(0, sess.timeLimit - elapsed);
+}
+function tickTimer(){
+  const sess = S.session;
+  if (!sess || sess.answered) return;
+  const remaining = currentRemaining();
+  updateTimerDOM(remaining, sess.timeLimit);
+  if (remaining <= 0){
+    clearInterval(sess.timerHandle);
+    handleTimeout();
+  }
+}
+function updateTimerDOM(remaining, limit){
+  const zone = getTimerZone(remaining, limit);
+  const bar = document.getElementById('timerBar');
+  if (bar){
+    const segs = bar.children;
+    const filled = Math.round(segs.length * (remaining/limit));
+    for (let i=0;i<segs.length;i++) segs[i].className = 'timerbar__seg' + (i<filled ? ' filled f-'+zone : '');
+  }
+  const ro = document.getElementById('timerReadout');
+  if (ro){
+    ro.textContent = `⏳ ${remaining.toFixed(1)}s`;
+    ro.className = 'timer-readout' + (zone==='danger' ? ' danger' : '');
+  }
+}
+function wireQuizQuestion(){
+  const sess = S.session;
+  const q = sess.questions[sess.index];
+  sess.answered = false;
+  sess.timerStart = performance.now();
+  clearInterval(sess.timerHandle);
+  sess.timerHandle = setInterval(tickTimer, 100);
+  updateTimerDOM(sess.timeLimit, sess.timeLimit);
+  const input = document.getElementById('answerInput');
+  if (input) input.focus();
+  if (q.type === 'listen') speak(cleanEn(q.word.en));
+}
+
+// ---------- answer handling ----------
+function lockQuestionUI(q, meta){
+  if (q.type==='mc' || q.type==='listen'){
+    $all('#mcOptions .mc-opt').forEach((btn,i)=>{
+      btn.disabled = true;
+      if (q.options[i] === q.vn) btn.classList.add('correct');
+      else if (i === meta.chosenIdx) btn.classList.add('wrong');
+    });
+  } else if (q.type==='tf'){
+    const trueBtn = $('.tf-true'), falseBtn = $('.tf-false');
+    if (trueBtn && falseBtn){
+      trueBtn.disabled = true; falseBtn.disabled = true;
+      (q.isTrue ? trueBtn : falseBtn).classList.add('correct');
+      if (meta.chosenBool !== undefined && meta.chosenBool !== q.isTrue){
+        (meta.chosenBool ? trueBtn : falseBtn).classList.add('wrong');
+      }
+    }
+  } else {
+    const input = document.getElementById('answerInput');
+    if (input) input.disabled = true;
+  }
+}
+function renderFeedback(q, correct, score, isTimeout){
+  const slot = document.getElementById('feedbackSlot');
+  if (!slot) return;
+  if (correct){
+    slot.innerHTML = `<div class="feedback-banner ok">✅ Chính xác! <span style="margin-left:auto; font-family:var(--font-mono); font-weight:800;">+${fmt1(score)} điểm</span></div>`;
+  } else {
+    const msg = isTimeout ? 'Hết giờ!' : 'Chưa đúng.';
+    slot.innerHTML = `<div class="feedback-banner bad">❌ ${msg} Đáp án đúng: <strong>&nbsp;${escapeHtml(cleanEn(q.word.en))}</strong>&nbsp;— ${escapeHtml(q.word.vn)}</div>`;
+  }
+}
+function finalizeAnswer(q, correct, remaining, meta={}){
+  const sess = S.session;
+  const score = correct ? computeScore(remaining, sess.timeLimit) : 0.0;
+  sess.scores.push(score);
+  if (correct) markHeal(q.word); else { markWrong(q.word); sess.wrongWords.push(q.word); }
+  lockQuestionUI(q, meta);
+  renderFeedback(q, correct, score, meta.isTimeout);
+  sess.advanceHandle = setTimeout(() => { if (S.session === sess) advanceQuestion(); }, correct ? 750 : 1450);
+}
+function submitMC(idx){
+  const sess = S.session; if (!sess || sess.answered) return;
+  const q = sess.questions[sess.index];
+  const remaining = currentRemaining();
+  clearInterval(sess.timerHandle);
+  sess.answered = true;
+  finalizeAnswer(q, q.options[idx] === q.vn, remaining, {chosenIdx: idx});
+}
+function submitTF(valBool){
+  const sess = S.session; if (!sess || sess.answered) return;
+  const q = sess.questions[sess.index];
+  const remaining = currentRemaining();
+  clearInterval(sess.timerHandle);
+  sess.answered = true;
+  finalizeAnswer(q, valBool === q.isTrue, remaining, {chosenBool: valBool});
+}
+function submitTyped(){
+  const sess = S.session; if (!sess || sess.answered) return;
+  const input = document.getElementById('answerInput');
+  const val = (input?.value || '').trim();
+  const q = sess.questions[sess.index];
+  const remaining = currentRemaining();
+  clearInterval(sess.timerHandle);
+  sess.answered = true;
+  const low = val.toLowerCase();
+  let correct = val.length > 0 && low === cleanEn(q.word.en).toLowerCase();
+  if (!correct && val.length > 0 && q.type === 'lookup'){
+    // Nhiều từ tiếng Anh có thể cùng nghĩa tiếng Việt (vd son/boy = "con trai"): chấp nhận cả hai.
+    const vnKey = q.word.vn.toLowerCase();
+    correct = VOCAB.some(w => w.vn.toLowerCase() === vnKey && cleanEn(w.en).toLowerCase() === low);
+  }
+  finalizeAnswer(q, correct, remaining, {});
+}
+function handleTimeout(){
+  const sess = S.session; if (!sess || sess.answered) return;
+  const q = sess.questions[sess.index];
+  sess.answered = true;
+  finalizeAnswer(q, false, 0, {isTimeout:true});
+}
+function advanceQuestion(){
+  const sess = S.session;
+  if (!sess) return;
+  sess.index++;
+  if (sess.index >= sess.questions.length) finishSession();
+  else render();
+}
+function submitFree(){
+  const sess = S.session; if (!sess) return;
+  const input = document.getElementById('freeInput');
+  const val = (input?.value || '').trim();
+  if (!val) return;
+  const found = sess.words.find(w => cleanEn(w.en).toLowerCase() === val.toLowerCase());
+  sess.freeLog.push({ text: val, ok: !!found, vn: found ? found.vn : null });
+  render();
+}
+
+function finishSession(){
+  const sess = S.session;
+  clearInterval(sess.timerHandle);
+  const scores = sess.scores;
+  const avg = scores.length ? Math.round((scores.reduce((a,b)=>a+b,0)/scores.length)*10)/10 : 0;
+  const rating = getRating(avg);
+  const xpGain = Math.round(scores.reduce((a,b)=>a+b,0));
+  S.stats.totalSessions++;
+  S.stats.totalAttempts += scores.length;
+  S.stats.totalCorrect += scores.filter(s=>s>0).length;
+  bumpStreakAndXp(xpGain);
+  persistStats(); persistMistakes();
+  S.lastResult = {
+    avg, rating, xpGain, count: scores.length,
+    wrongWords: dedupeByEn(sess.wrongWords),
+    sourceLabel: sess.sourceLabel, mode: sess.mode, timeLimit: sess.timeLimit, words: sess.words,
+  };
+  S.session = null;
+  navigate('results');
+}
+// ============================================================
+// APP.JS — Part 5: Results, Flashcards, Mistakes, Favorites, Stats
+// ============================================================
+
+function viewResults(){
+  const r = S.lastResult;
+  if (!r) return `<div class="empty-state">Chưa có kết quả nào.<div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="home">Về trang chủ</button></div></div>`;
+  const pct = clamp(r.avg/10*100, 0, 100);
+  const zoneColor = {good:'var(--green)', info:'var(--cyan)', warn:'var(--yellow)', danger:'var(--red)'}[r.rating.zone];
+  const wrongRows = r.wrongWords.map(w => {
+    const isFav = S.favorites.has(w.en.toLowerCase());
+    return `<div class="word-row">
+      <div class="word-row__main">
+        <div class="word-row__en">${escapeHtml(cleanEn(w.en))}</div>
+        <div class="word-row__vn">${escapeHtml(w.vn)}</div>
+      </div>
+      <div class="word-row__actions">
+        <button class="iconbtn small" data-action="speak" data-text="${escapeHtml(cleanEn(w.en))}">🔊</button>
+        <button class="iconbtn small ${isFav?'on':''}" data-action="toggle-fav" data-en="${escapeHtml(w.en)}">${isFav?'★':'☆'}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="term corner-mark">
+    <div class="term__bar"><div class="term__dots"><span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span></div><span class="term__path">~/practice/result.log</span></div>
+    <div class="term__body result-hero">
+      <div style="font-size:38px;">${r.rating.emoji}</div>
+      <div class="result-score" style="color:${zoneColor};">${fmt1(r.avg)}<span style="font-size:20px; color:var(--text-faint);">/10</span></div>
+      <div class="result-label" style="color:${zoneColor};">${r.rating.label}</div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%; background:${zoneColor};"></div></div>
+      <p class="muted" style="margin-top:14px; font-size:13.5px;">${r.count} câu · ${escapeHtml(r.sourceLabel)} · <span class="text-cyan" style="font-weight:700;">+${r.xpGain} XP</span></p>
+    </div>
+  </div>
+
+  ${r.wrongWords.length ? `
+  <div class="section-head"><div><div class="eyebrow">Cần ôn lại</div><div class="section-title">${r.wrongWords.length} từ bạn chưa chắc</div></div></div>
+  <div class="stack">${wrongRows}</div>
+  ` : `<div class="empty-state" style="padding:26px 20px;"><div class="empty-state__icon">🎉</div>Không sai từ nào — xuất sắc!</div>`}
+
+  <div class="grid grid-2" style="margin-top:24px;">
+    <button class="btn btn-primary btn-block" data-action="result-retry">↻ Làm lại</button>
+    <button class="btn btn-secondary btn-block" data-action="result-change-setup">⚙️ Đổi chế độ</button>
+  </div>
+  <button class="btn btn-ghost btn-block" style="margin-top:10px;" data-action="nav" data-view="home">← Về trang chủ</button>
+  `;
+}
+
+// ---------- Flashcards ----------
+function viewFlashcards(){
+  const fs = S.flashSession;
+  if (!fs || !fs.words.length){
+    return `<div class="empty-state"><div class="empty-state__icon">🃏</div>Chưa có bộ từ nào để học Flashcard.
+      <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="library">Chọn từ vựng</button></div></div>`;
+  }
+  if (fs.index >= fs.words.length){
+    const missedCount = (fs.missed||[]).length;
+    return `
+    <div class="term"><div class="term__body result-hero">
+      <div style="font-size:38px;">🃏</div>
+      <div class="result-score text-cyan">${fs.knowCount}/${fs.total}</div>
+      <div class="result-label text-cyan">TỪ ĐÃ NHỚ</div>
+      <p class="muted" style="margin-top:14px;">${escapeHtml(fs.sourceLabel)}</p>
+    </div></div>
+    <div class="grid grid-2" style="margin-top:20px;">
+      <button class="btn btn-primary btn-block" data-action="flash-restart-missed" ${missedCount?'':'disabled'}>Ôn ${missedCount} từ chưa nhớ</button>
+      <button class="btn btn-secondary btn-block" data-action="exit-flashcards">Về trang chủ</button>
+    </div>`;
+  }
+  const w0 = fs.words[fs.index];
+  const w = Object.assign({}, VOCAB_BY_EN.get(w0.en.toLowerCase()) || {}, w0, { ex: (VOCAB_BY_EN.get(w0.en.toLowerCase()) || w0).ex, exVn: (VOCAB_BY_EN.get(w0.en.toLowerCase()) || w0).exVn });
+  const isFav = S.favorites.has(w.en.toLowerCase());
+  return `
+  <div class="row-between">
+    <span class="quiz-progress">THẺ ${fs.index+1} / ${fs.words.length}</span>
+    <span class="muted" style="font-size:13px;">Đã nhớ: ${fs.knowCount}</span>
+  </div>
+  <div class="progress-bar-outer" style="margin:10px 0 22px;"><div class="progress-bar-inner" style="width:${(fs.index/fs.words.length*100)}%; background:var(--cyan);"></div></div>
+
+  <div class="flashcard-wrap">
+    <div class="flashcard ${fs.flipped?'flipped':''} ${w.ex?'has-ex':''}" id="flashcardEl" data-action="flip-card">
+      <div class="flashcard__face">
+        <span class="badge badge-lvl${w.level}">${levelName(w.level)}</span>
+        <div class="flashcard__word">${escapeHtml(cleanEn(w.en))}</div>
+        <span class="muted" style="font-size:12.5px;">${catIcon(w.cat)} ${escapeHtml(catName(w.cat))}</span>
+        <span class="flashcard__hint">Bấm thẻ để lật</span>
+      </div>
+      <div class="flashcard__face flashcard__face--back">
+        <div class="flashcard__word flashcard__vn">${escapeHtml(w.vn)}</div>
+        ${w.ex ? `<div class="flashcard__ex"><div class="flashcard__ex-en">${escapeHtml(w.ex)}</div>${w.exVn ? `<div class="flashcard__ex-vn">${escapeHtml(w.exVn)}</div>` : ''}</div>` : ''}
+        <span class="flashcard__hint">${escapeHtml(cleanEn(w.en))}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row gap-10" style="justify-content:center; margin-bottom:18px;">
+    <button class="iconbtn" data-action="speak" data-text="${escapeHtml(cleanEn(w.en))}" title="Phát âm từ">🔊</button>
+    ${w.ex ? `<button class="iconbtn" data-action="speak" data-text="${escapeHtml(w.ex)}" title="Nghe câu ví dụ">🗣️</button>` : ''}
+    <button class="iconbtn ${isFav?'on':''}" data-action="toggle-fav" data-en="${escapeHtml(w.en)}" title="Yêu thích">${isFav?'★':'☆'}</button>
+  </div>
+
+  <div class="grid grid-2">
+    <button class="btn btn-secondary btn-lg" data-action="card-dontknow">😅 Chưa nhớ</button>
+    <button class="btn btn-primary btn-lg" data-action="card-know">✅ Đã nhớ</button>
+  </div>
+  <button class="btn btn-ghost btn-block" style="margin-top:12px;" data-action="exit-flashcards">← Thoát flashcard</button>
+  `;
+}
+
+function flipCard(){
+  const fs = S.flashSession; if (!fs) return;
+  fs.flipped = !fs.flipped;
+  const elc = document.getElementById('flashcardEl');
+  if (elc) elc.classList.toggle('flipped');
+}
+function advanceFlashcard(){
+  const fs = S.flashSession;
+  fs.flipped = false;
+  fs.index++;
+  if (fs.index >= fs.words.length && !fs.streakCounted){
+    fs.streakCounted = true;
+    bumpStreakAndXp(0);   // học xong một bộ flashcard cũng tính là đã học trong ngày
+    persistStats();
+  }
+  persistMistakes();
+  render();
+}
+function cardKnow(){
+  const fs = S.flashSession; if (!fs) return;
+  markHeal(fs.words[fs.index]);
+  fs.knowCount++;
+  advanceFlashcard();
+}
+function cardDontKnow(){
+  const fs = S.flashSession; if (!fs) return;
+  const w = fs.words[fs.index];
+  markWrong(w);
+  fs.missed = fs.missed || [];
+  fs.missed.push(w);
+  advanceFlashcard();
+}
+function restartMissedFlashcards(){
+  const fs = S.flashSession;
+  if (!fs || !(fs.missed||[]).length){ navigate('home'); return; }
+  S.flashSession = { words: shuffleArray(fs.missed), index:0, flipped:false, knowCount:0, total: fs.missed.length, sourceLabel: 'Ôn lại từ chưa nhớ' };
+  navigate('flashcards');
+}
+function exitFlashcards(){ S.flashSession = null; navigate('home'); }
+
+// ---------- Mistakes ----------
+function viewMistakes(){
+  const list = mistakeList();
+  if (!list.length){
+    return `<div class="empty-state"><div class="empty-state__icon">🎉</div>Không có từ nào cần ôn lại — bạn đang học rất tốt!
+      <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="library">Học thêm từ mới</button></div></div>`;
+  }
+  const rows = list.map(m => {
+    const isFav = S.favorites.has(m.en.toLowerCase());
+    return `<div class="word-row">
+      <div class="word-row__main">
+        <div class="word-row__en">${escapeHtml(cleanEn(m.en))} <span class="badge badge-lvl3" style="margin-left:6px;">Sai ${m.count} lần</span></div>
+        <div class="word-row__vn">${escapeHtml(m.vn)}</div>
+      </div>
+      <div class="word-row__actions">
+        <button class="iconbtn small" data-action="speak" data-text="${escapeHtml(cleanEn(m.en))}">🔊</button>
+        <button class="iconbtn small ${isFav?'on':''}" data-action="toggle-fav" data-en="${escapeHtml(m.en)}">${isFav?'★':'☆'}</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="row-between">
+    <div><div class="eyebrow">Ôn tập thông minh</div><div class="section-title">${list.length} từ hay sai</div></div>
+    <button class="btn btn-primary btn-sm" data-action="mistakes-practice">Ôn ngay →</button>
+  </div>
+  <p class="muted" style="font-size:13.5px; margin:8px 0 16px;">Mỗi lần trả lời sai, từ sẽ xuất hiện ở đây. Trả lời đúng nhiều lần liên tiếp để từ tự biến mất khỏi danh sách.</p>
+  <div class="stack">${rows}</div>
+  `;
+}
+
+// ---------- Favorites ----------
+function viewFavorites(){
+  const list = favoriteWords();
+  if (!list.length){
+    return `<div class="empty-state"><div class="empty-state__icon">⭐</div>Chưa có từ yêu thích nào.
+      <p class="muted" style="font-size:13px; margin-top:6px;">Bấm ☆ khi duyệt thư viện hoặc làm bài để lưu từ khó nhớ vào đây.</p>
+      <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" data-action="nav" data-view="library">Duyệt thư viện</button></div></div>`;
+  }
+  const rows = list.map(w => `<div class="word-row">
+      <div class="word-row__main">
+        <div class="word-row__en">${escapeHtml(cleanEn(w.en))} <span class="badge badge-lvl${w.level}" style="margin-left:6px;">${levelName(w.level)}</span></div>
+        <div class="word-row__vn">${escapeHtml(w.vn)}</div>
+      </div>
+      <div class="word-row__actions">
+        <button class="iconbtn small" data-action="speak" data-text="${escapeHtml(cleanEn(w.en))}">🔊</button>
+        <button class="iconbtn small on" data-action="toggle-fav" data-en="${escapeHtml(w.en)}">★</button>
+      </div>
+    </div>`).join('');
+  return `
+  <div class="row-between">
+    <div><div class="eyebrow">Đã lưu</div><div class="section-title">${list.length} từ yêu thích</div></div>
+    <button class="btn btn-primary btn-sm" data-action="favorites-practice">Luyện tập →</button>
+  </div>
+  <div class="stack" style="margin-top:16px;">${rows}</div>
+  `;
+}
+
+// ---------- Stats ----------
+function viewStats(){
+  const lvl = xpLevel(S.stats.xp);
+  const acc = S.stats.totalAttempts ? Math.round(S.stats.totalCorrect/S.stats.totalAttempts*100) : 0;
+  const byLevel = [1,2,3].map(l => ({ l, total: VOCAB.filter(w=>w.level===l).length }));
+
+  return `
+  <div class="eyebrow">Thống kê</div>
+  <div class="section-title">Hành trình học của bạn</div>
+
+  <div class="grid grid-2" style="margin-top:18px;">
+    <div class="stat-chip"><div class="stat-chip__value text-orange">${currentStreak()}🔥</div><div class="stat-chip__label">Ngày liên tiếp</div></div>
+    <div class="stat-chip"><div class="stat-chip__value">Lv.${lvl.level}</div><div class="stat-chip__label">${S.stats.xp} XP tổng</div></div>
+    <div class="stat-chip"><div class="stat-chip__value text-cyan">${S.stats.totalSessions}</div><div class="stat-chip__label">Buổi luyện tập</div></div>
+    <div class="stat-chip"><div class="stat-chip__value text-green">${acc}%</div><div class="stat-chip__label">Đúng ${S.stats.totalCorrect}/${S.stats.totalAttempts} câu</div></div>
+  </div>
+
+  <div class="field" style="margin-top:22px;">
+    <label>Cấp độ ${lvl.level} · còn ${lvl.need-lvl.into} XP để lên cấp</label>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${lvl.pct}%; background:var(--cyan);"></div></div>
+  </div>
+
+  <div class="section-head"><div><div class="eyebrow">Kho từ vựng</div><div class="section-title">Thư viện theo cấp độ</div></div></div>
+  <div class="stack">
+    ${byLevel.map(x => `<div class="word-row" style="align-items:center;">
+        <div class="word-row__main"><div class="row-between"><span class="badge badge-lvl${x.l}">${levelName(x.l)}</span><span class="muted" style="font-size:12.5px;">${x.total} từ</span></div></div>
+      </div>`).join('')}
+  </div>
+
+  <div class="section-head"><div><div class="eyebrow">Tình trạng hiện tại</div><div class="section-title">Từ cần chú ý</div></div></div>
+  <div class="grid grid-2">
+    <div class="stat-chip"><div class="stat-chip__value text-pink">${mistakeList().length}</div><div class="stat-chip__label">Từ hay sai</div></div>
+    <div class="stat-chip"><div class="stat-chip__value text-yellow">${S.favorites.size}</div><div class="stat-chip__label">Từ yêu thích</div></div>
+  </div>
+
+  <div class="section-head"><div><div class="eyebrow">Dữ liệu</div><div class="section-title">Sao lưu &amp; khôi phục</div></div></div>
+  <p class="muted" style="font-size:13.5px; line-height:1.55; margin-bottom:12px;">
+    Tiến độ được lưu tự động trong trình duyệt này. Nếu bạn xóa dữ liệu duyệt web, đổi trình duyệt hoặc đổi thiết bị, hãy dùng file sao lưu.
+    ${S.stats.lastBackup ? 'Sao lưu gần nhất: ' + escapeHtml(new Date(S.stats.lastBackup).toLocaleString('vi-VN')) + '.' : 'Bạn chưa sao lưu lần nào.'}
+    ${HAS_LS ? '' : '<br><b>⚠️ Trình duyệt đang chặn lưu dữ liệu, dữ liệu sẽ mất khi đóng trang.</b>'}
+  </p>
+  <div class="grid grid-2">
+    <button class="btn btn-primary btn-block" data-action="export-data">⬇️ Xuất sao lưu</button>
+    <button class="btn btn-secondary btn-block" data-action="import-click">⬆️ Khôi phục</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+  <button class="btn btn-ghost btn-block" style="margin-top:12px;" data-action="reset-data">Xóa toàn bộ dữ liệu</button>
+  `;
+}
+// ============================================================
+// APP.JS — Part 6: action dispatcher, keyboard shortcuts, boot
+// ============================================================
+
+function afterRender(view){
+  if (view === 'quiz' && S.session){
+    if (S.session.mode === 'free'){
+      const fi = document.getElementById('freeInput');
+      if (fi) fi.focus();
+      return;
+    }
+    wireQuizQuestion();
+  }
+}
+
+// ---------- confirm modal (avoids native confirm()/alert() inside sandboxed iframes) ----------
+function showConfirm(message, onConfirm, okLabel){
+  S.confirmModal = { message, action: onConfirm, okLabel: okLabel || 'Xóa' };
+  renderModal();
+}
+function renderModal(){
+  let scrim = document.getElementById('modalScrim');
+  if (!S.confirmModal){ if (scrim) scrim.remove(); return; }
+  if (!scrim){
+    scrim = document.createElement('div');
+    scrim.id = 'modalScrim';
+    scrim.className = 'modal-scrim';
+    document.body.appendChild(scrim);
+  }
+  scrim.innerHTML = `<div class="modal-sheet">
+    <p style="font-size:15px; margin-bottom:20px; line-height:1.5;">${escapeHtml(S.confirmModal.message)}</p>
+    <div class="grid grid-2">
+      <button class="btn btn-secondary" data-action="modal-cancel">Hủy</button>
+      <button class="btn btn-danger" data-action="modal-confirm">${escapeHtml(S.confirmModal.okLabel || 'Xóa')}</button>
+    </div>
+  </div>`;
+}
+
+let searchDebounce = null;
+function onLibrarySearchInput(value){
+  S.library.search = value;
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => { S.library.limit = 60; refreshLibraryResults(); }, 150);
+}
+function onTimeSliderInput(value){
+  S.setupTime = Number(value);
+  const strongEl = document.querySelector('#timeField label strong');
+  if (strongEl) strongEl.textContent = S.setupTime + 's';
+}
+
+function handleAction(action, dataset, node){
+  switch(action){
+    // ---- global nav ----
+    case 'nav': navigate(dataset.view); break;
+    case 'toggle-theme': {
+      S.theme = S.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', S.theme);
+      persistTheme();
+      render();
+      break;
+    }
+    case 'speak': speak(dataset.text); break;
+    case 'toggle-fav': toggleFavorite(dataset.en); render(); break;
+
+    // ---- home ----
+    case 'start-flashcards-quick': {
+      const words = quickFlashcardWords();
+      S.flashSession = { words: shuffleArray(words), index:0, flipped:false, knowCount:0, total: words.length, sourceLabel: 'Gợi ý nhanh cho bạn' };
+      navigate('flashcards');
+      break;
+    }
+
+    // ---- library ----
+    case 'lib-set-level': S.library.level = dataset.level; S.library.cat = 'all'; S.library.limit = 60; render(); break;
+    case 'lib-set-cat': S.library.cat = dataset.cat; S.library.limit = 60; render(); break;
+    case 'lib-reset': S.library = { level:'all', cat:'all', search:'', limit:60 }; render(); break;
+    case 'lib-load-more': S.library.limit += 60; refreshLibraryResults(); break;
+    case 'lib-start': {
+      const words = filteredLibraryWords();
+      if (!words.length) break;
+      const levelLabel = S.library.level==='all' ? 'Mọi cấp độ' : levelName(S.library.level);
+      const catLabel = S.library.cat==='all' ? 'mọi chủ đề' : catName(S.library.cat);
+      setPendingSource(words, `${levelLabel} · ${catLabel}`);
+      navigate('setup');
+      break;
+    }
+
+    // ---- setup ----
+    case 'setup-set-count': S.setupCount = Number(dataset.count); render(); break;
+    case 'setup-set-mode': S.setupMode = dataset.mode; render(); break;
+    case 'start-session': {
+      const src = S.pendingSource;
+      if (!src) break;
+      const words = sampleArray(src.words, S.setupCount || src.words.length);
+      startSession(words, S.setupMode, S.setupTime || 8, src.label);
+      break;
+    }
+
+    // ---- custom lists ----
+    case 'custom-new': S.editingListName = ''; render(); break;
+    case 'custom-edit': S.editingListName = dataset.name; render(); break;
+    case 'custom-cancel-edit': S.editingListName = null; render(); break;
+    case 'custom-practice': {
+      const words = S.customLists[dataset.name];
+      if (!words) break;
+      setPendingSource(words.map(w => ({...w, level:0, cat:'custom'})), dataset.name);
+      navigate('setup');
+      break;
+    }
+    case 'custom-delete': {
+      showConfirm(`Xóa bộ từ "${dataset.name}"? Không thể hoàn tác.`, () => {
+        delete S.customLists[dataset.name];
+        persistCustomLists();
+        render();
+      });
+      break;
+    }
+    case 'custom-save': {
+      const nameInput = document.getElementById('customName');
+      const textInput = document.getElementById('customText');
+      const name = (nameInput?.value || '').trim();
+      const text = textInput?.value || '';
+      const errorSlot = document.getElementById('customError');
+      if (!name){ if (errorSlot) errorSlot.innerHTML = '<p class="error-text">Vui lòng đặt tên cho bộ từ.</p>'; break; }
+      const { dict, badCount } = parseCustomInput(text);
+      if (dict.length < 4){
+        if (errorSlot) errorSlot.innerHTML = `<p class="error-text">Cần tối thiểu 4 cặp từ hợp lệ (hiện có ${dict.length} hợp lệ). Định dạng mỗi dòng: "tiếng anh - tiếng việt".</p>`;
+        break;
+      }
+      if (S.editingListName && S.editingListName !== '' && S.editingListName !== name) delete S.customLists[S.editingListName];
+      S.customLists[name] = dict;
+      persistCustomLists();
+      S.editingListName = null;
+      toast(badCount ? `Đã lưu ${dict.length} từ (bỏ qua ${badCount} dòng không hợp lệ).` : `Đã lưu ${dict.length} từ.`);
+      render();
+      break;
+    }
+
+    // ---- quiz ----
+    case 'submit-mc': submitMC(Number(dataset.idx)); break;
+    case 'submit-tf': submitTF(dataset.val === '1'); break;
+    case 'submit-typed': submitTyped(); break;
+    case 'submit-free': submitFree(); break;
+    case 'quiz-replay-audio': { const q = S.session?.questions[S.session.index]; if (q) speak(cleanEn(q.word.en)); break; }
+    case 'cancel-quiz': cancelSession(); break;
+
+    // ---- results ----
+    case 'result-retry': {
+      const r = S.lastResult;
+      if (r) startSession(r.words, r.mode, r.timeLimit, r.sourceLabel);
+      break;
+    }
+    case 'result-change-setup': {
+      const r = S.lastResult;
+      if (r){ setPendingSource(r.words, r.sourceLabel); S.setupMode = r.mode; S.setupTime = r.timeLimit; navigate('setup'); }
+      break;
+    }
+
+    // ---- flashcards ----
+    case 'flip-card': flipCard(); break;
+    case 'card-know': cardKnow(); break;
+    case 'card-dontknow': cardDontKnow(); break;
+    case 'flash-restart-missed': restartMissedFlashcards(); break;
+    case 'exit-flashcards': exitFlashcards(); break;
+
+    // ---- mistakes / favorites ----
+    case 'mistakes-practice': {
+      const list = mistakeList().map(m => VOCAB_BY_EN.get(m.en.toLowerCase()) || m);
+      setPendingSource(list, 'Từ hay sai');
+      navigate('setup');
+      break;
+    }
+    case 'favorites-practice': {
+      setPendingSource(favoriteWords(), 'Từ yêu thích');
+      navigate('setup');
+      break;
+    }
+
+    // ---- backup ----
+    case 'export-data': exportData(); break;
+    case 'import-click': { const f = document.getElementById('importFile'); if (f) f.click(); break; }
+    case 'reset-data':
+      showConfirm('Xóa toàn bộ XP, streak, từ hay sai, yêu thích và danh sách riêng? Không thể hoàn tác.', resetAllData, 'Xóa hết');
+      break;
+
+    // ---- modal ----
+    case 'modal-cancel': S.confirmModal = null; renderModal(); break;
+    case 'modal-confirm': {
+      const act = S.confirmModal?.action;
+      S.confirmModal = null; renderModal();
+      if (act) act();
+      break;
+    }
+  }
+}
+
+// ---------- global delegated listeners (registered once; survive re-renders) ----------
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-action]');
+  if (!t) return;
+  e.preventDefault();
+  handleAction(t.dataset.action, t.dataset, t);
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'importFile'){ importData(e.target.files[0]); e.target.value = ''; }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'librarySearch') onLibrarySearchInput(e.target.value);
+  if (e.target.id === 'timeSlider') onTimeSliderInput(e.target.value);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter'){
+    const id = document.activeElement?.id;
+    if (id === 'freeInput'){ e.preventDefault(); submitFree(); return; }
+    if (id === 'answerInput'){ e.preventDefault(); submitTyped(); return; }
+    if (id === 'customName'){ e.preventDefault(); return; }
+  }
+  if (S.view === 'quiz' && S.session && S.session.mode !== 'free' && !S.session.answered){
+    const tag = document.activeElement?.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA'){
+      const q = S.session.questions[S.session.index];
+      if (q && (q.type==='mc' || q.type==='listen') && ['1','2','3','4'].includes(e.key)){
+        const idx = Number(e.key) - 1;
+        if (idx < q.options.length) submitMC(idx);
+      } else if (q && q.type==='tf'){
+        if (e.key === '1') submitTF(true);
+        if (e.key === '2') submitTF(false);
+      }
+    }
+  }
+  if (e.key === 'Escape'){
+    if (S.confirmModal){ S.confirmModal = null; renderModal(); return; }
+    if (S.session){
+      if (S.session.mode === 'free') cancelSession();
+      else showConfirm('Hủy bài đang làm? Kết quả bài này sẽ không được tính.', cancelSession, 'Hủy bài');
+    }
+    else if (S.flashSession){ exitFlashcards(); }
+  }
+});
+
+// ---------- boot ----------
+async function boot(){
+  const defaults = STATS_DEFAULTS;
+  try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  const [stats, favorites, mistakes, customLists, theme] = await Promise.all([
+    loadKey('stats', defaults),
+    loadKey('favorites', []),
+    loadKey('mistakes', {}),
+    loadKey('customLists', {}),
+    loadKey('theme', 'dark'),
+  ]);
+  S.stats = Object.assign({}, defaults, stats);
+  S.favorites = new Set(favorites);
+  S.mistakes = mistakes || {};
+  S.customLists = customLists || {};
+  S.theme = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', S.theme);
+  booted = true;
+  if (!HAS_LS) warnStorage();
+  navigate('home');
+}
+
+boot();
+
+// ---------- PWA: đăng ký service worker (chỉ chạy khi mở qua http/https) ----------
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  const hadController = !!navigator.serviceWorker.controller;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) toast('🔄 Đã có bản mới, tải lại trang để cập nhật.');
+  });
+}
+
+</script>
+</body>
+</html>
